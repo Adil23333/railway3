@@ -43,6 +43,7 @@ def login():
             session["user_id"] = user.id
             session["role"] = role
             session["department_id"] = user.department_id
+            session["username"] = user.username
 
             if role == "LEVEL1":
                 return redirect("/department")
@@ -173,25 +174,41 @@ def department():
 
     result = db.session.execute(
         db.text("""
-            SELECT
-                k.*,
-                d.dept_name,
-                md.performance_month,
-                md.cumulative_performance,
-                md.status
-            FROM kpis k
-            JOIN departments d
-            ON k.department_id = d.id
-            LEFT JOIN monthly_data md
-            ON md.kpi_id = k.id
-            AND md.entered_by = :user_id
-            ORDER BY
-                k.display_order,
-                k.id
+           SELECT
+    k.*,
+    d.dept_name,
+    md.performance_month,
+    md.cumulative_performance,
+    md.status,
+
+    prev.performance_month AS previous_year_value
+
+FROM kpis k
+
+JOIN departments d
+ON k.department_id = d.id
+
+LEFT JOIN monthly_data md
+ON md.kpi_id = k.id
+AND md.entered_by = :user_id
+AND md.month = :month
+AND md.year = :year
+
+LEFT JOIN monthly_data prev
+ON prev.kpi_id = k.id
+AND prev.month = :month
+AND prev.year = :previous_year
+
+ORDER BY
+    k.display_order,
+    k.id
         """),
     {
-        "user_id": session["user_id"]
-    }
+    "user_id": session["user_id"],
+    "month": selected_month,
+    "year": int(selected_year),
+    "previous_year": int(selected_year) - 1
+}
     )
 
     kpis = result.fetchall()
@@ -314,6 +331,7 @@ def department():
 @app.route("/hod")
 def hod():
 
+
     if "user_id" not in session:
         return redirect("/login")
 
@@ -322,6 +340,9 @@ def hod():
 
     department_id = session["department_id"]
 
+    selected_month = request.args.get("month", "JUNE")
+    selected_year = request.args.get("year", "2026")
+
     result = db.session.execute(
         db.text("""
             SELECT
@@ -329,17 +350,38 @@ def hod():
                 md.performance_month,
                 md.cumulative_performance,
                 md.status,
-                k.kpi_name
+                md.month,
+                md.year,
+
+                k.kpi_name,
+                k.unit,
+                k.annual_target,
+                k.section_name,
+
+                d.dept_name
+
             FROM monthly_data md
 
             JOIN kpis k
             ON md.kpi_id = k.id
 
+            JOIN departments d
+            ON k.department_id = d.id
+
             WHERE md.status = 'SUBMITTED'
             AND k.department_id = :department_id
+
+            AND md.month = :month
+            AND md.year = :year
+
+            ORDER BY
+                k.display_order,
+                k.id
         """),
         {
-            "department_id": department_id
+            "department_id": department_id,
+            "month": selected_month,
+            "year": int(selected_year)
         }
     )
 
@@ -347,8 +389,12 @@ def hod():
 
     return render_template(
         "hod_review.html",
-        rows=rows
+        rows=rows,
+        selected_month=selected_month,
+        selected_year=selected_year
     )
+    
+
 @app.route("/approve/<int:id>")
 def approve(id):
 
