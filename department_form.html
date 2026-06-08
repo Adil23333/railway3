@@ -243,10 +243,10 @@
     font-size:18px;
     text-transform:uppercase;
     letter-spacing:1px;
-    padding:14px 15px !important;
-    border-top:2px solid #d4a017;
-    border-bottom:2px solid #d4a017;
+    padding:18px 15px !important;
+    border:1px solid #d4a017 !important;
     text-align:center !important;
+    width:100%;
 }
 
 .kpi-name-cell{
@@ -261,6 +261,21 @@
 }
  .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
  .site-footer .gov { font-size: .65rem; color: var(--rly-gold); font-weight: 600; }
+ .user-info{
+    margin-left:auto;
+    text-align:right;
+    color:white;
+}
+
+.user-info .welcome{
+    font-size:14px;
+    font-weight:700;
+}
+
+.user-info .empid{
+    font-size:12px;
+    color:#d4a017;
+}
  </style>
 </head>
 <body>
@@ -287,6 +302,15 @@
  <div class="app-name">Division Performance Monitoring System</div>
  <div class="app-sub">Palakkad Division &nbsp;|&nbsp; Southern Railway</div>
  </div>
+ <div class="user-info">
+    <div class="welcome">
+        Welcome, {{ session.username }}
+    </div>
+
+    <div class="empid">
+        Employee ID : {{ session.user_id }}
+    </div>
+</div>
 </nav>
  <div class="row mb-3">
 
@@ -364,6 +388,7 @@
     <th>KPI</th>
     <th>Unit</th>
     <th>Annual Target</th>
+    <th>Previous Year</th>
     <th>Performance For Month</th>
     <th>Cumulative Performance</th>
 </tr>
@@ -375,7 +400,7 @@
 {% if current_section.value != kpi.section_name %}
 
 <tr class="section-header-row">
-    <td colspan="6">
+    <td colspan="7">
         {{ kpi.section_name }}
     </td>
 </tr>
@@ -398,8 +423,17 @@
 <td class="target-cell">
     {{ kpi.annual_target }}
 </td>
- <td>
- <input
+
+<td>
+    <input
+        type="text"
+        value="{{ kpi.previous_year_value if kpi.previous_year_value else 'N/A' }}"
+        class="kpi-input"
+        readonly>
+</td>
+
+<td>
+<input
     type="number"
     step="0.01"
     name="month_{{ kpi.id }}"
@@ -407,9 +441,10 @@
     class="kpi-input"
     placeholder="0.00"
 
-    {% if kpi.department_id != user_department %}
+    {% if kpi.department_id|int != user_department|int %}
     readonly
     {% endif %}
+    
 >
  </td>
  <td>
