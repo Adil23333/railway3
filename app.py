@@ -232,7 +232,6 @@ ORDER BY
 
             month_value = request.form.get(f"month_{kpi.id}")
             cumulative_value = request.form.get(f"cum_{kpi.id}")
-		previous_year_value = request.form.get(f"prev_{kpi.id}")
 
             if month_value == "":
                 month_value = None
@@ -260,61 +259,55 @@ ORDER BY
                 if existing:
 
                     db.session.execute(
-    db.text("""
-        UPDATE monthly_data
-        SET
-            previous_year = :previous_year,
-            performance_month = :month_value,
-            cumulative_performance = :cumulative_value,
-            status = :status
-        WHERE id = :id
-    """),
-    {
-        "id": existing.id,
-        "previous_year": float(previous_year_value) if previous_year_value else None,
-        "month_value": float(month_value) if month_value else None,
-        "cumulative_value": float(cumulative_value) if cumulative_value else None,
-        "status": status
-    }
-)
+                        db.text("""
+                            UPDATE monthly_data
+                            SET
+                                performance_month = :month_value,
+                                cumulative_performance = :cumulative_value,
+                                status = :status
+                            WHERE id = :id
+                        """),
+                        {
+                            "id": existing.id,
+                            "month_value": float(month_value) if month_value else None,
+                            "cumulative_value": float(cumulative_value) if cumulative_value else None,
+                            "status": status
+                        }
+                    )
+
                 else:
 
-                  db.session.execute(
-    db.text("""
-        INSERT INTO monthly_data
-        (
-            kpi_id,
-            month,
-            year,
-            previous_year,
-            performance_month,
-            cumulative_performance,
-            entered_by,
-            status
-        )
-        VALUES
-        (
-            :kpi_id,
-            :month,
-            :year,
-            :previous_year,
-            :month_value,
-            :cumulative_value,
-            :entered_by,
-            :status
-        )
-    """),
-    {
-        "kpi_id": kpi.id,
-        "month": selected_month,
-        "year": int(selected_year),
-        "previous_year": float(previous_year_value) if previous_year_value else None,
-        "month_value": float(month_value) if month_value else None,
-        "cumulative_value": float(cumulative_value) if cumulative_value else None,
-        "entered_by": session["user_id"],
-        "status": status
-    }
-)
+                    db.session.execute(
+                        db.text("""
+                            INSERT INTO monthly_data
+                            (
+                                kpi_id,
+                                month,
+                                year,
+                                performance_month,
+                                cumulative_performance,
+                                entered_by,
+                                status
+                            )
+                            VALUES
+                            (
+                                :kpi_id,
+                                'JUNE',
+                                2026,
+                                :month_value,
+                                :cumulative_value,
+                                :entered_by,
+                                :status
+                            )
+                        """),
+                        {
+                            "kpi_id": kpi.id,
+                            "month_value": float(month_value) if month_value else None,
+                            "cumulative_value": float(cumulative_value) if cumulative_value else None,
+                            "entered_by": session["user_id"],
+                            "status": status
+                        }
+                    )
 
         db.session.commit()
 
