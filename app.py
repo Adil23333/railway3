@@ -3,8 +3,9 @@ from flask import render_template
 from flask import request
 from flask import redirect
 from flask import session
-from flask import jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask import jsonify
+
 
 app = Flask(__name__)
 app.secret_key = "railway_secret"
@@ -181,7 +182,8 @@ def department():
     md.cumulative_performance,
     md.status,
 
-    prev.performance_month AS previous_year_value
+   prev.performance_month AS previous_year_value,
+   prev.cumulative_performance AS previous_year_cumulative
 
 FROM kpis k
 
@@ -232,14 +234,21 @@ ORDER BY
 
             month_value = request.form.get(f"month_{kpi.id}")
             cumulative_value = request.form.get(f"cum_{kpi.id}")
+            prev_cum_value = request.form.get(f"prev_cum_{kpi.id}")
+            prev_year_value = request.form.get(f"prev_{kpi.id}")
 
             if month_value == "":
                 month_value = None
 
             if cumulative_value == "":
                 cumulative_value = None
+            if prev_cum_value == "":
+                prev_cum_value = None
+            if prev_year_value == "":
+                prev_year_value = None
+                
 
-            if month_value is not None or cumulative_value is not None:
+            if month_value is not None or cumulative_value is not None  or prev_year_value is not None or prev_cum_value is not None:
 
                 existing = db.session.execute(
                     db.text("""
@@ -261,18 +270,22 @@ ORDER BY
                     db.session.execute(
                         db.text("""
                             UPDATE monthly_data
-                            SET
-                                performance_month = :month_value,
-                                cumulative_performance = :cumulative_value,
-                                status = :status
+SET
+    performance_month = :month_value,
+    cumulative_performance = :cumulative_value,
+    previous_year_value = :prev_year_value,
+    cumulative_performance_of_prev_year = :prev_cum_value,
+    status = :status
                             WHERE id = :id
                         """),
                         {
-                            "id": existing.id,
-                            "month_value": float(month_value) if month_value else None,
-                            "cumulative_value": float(cumulative_value) if cumulative_value else None,
-                            "status": status
-                        }
+    "id": existing.id,
+    "month_value": float(month_value) if month_value else None,
+    "cumulative_value": float(cumulative_value) if cumulative_value else None,
+    "prev_year_value": float(prev_year_value) if prev_year_value else None,
+    "prev_cum_value": float(prev_cum_value) if prev_cum_value else None,
+    "status": status
+}
                     )
 
                 else:
@@ -285,7 +298,9 @@ ORDER BY
                                 month,
                                 year,
                                 performance_month,
+                                previous_year_value,
                                 cumulative_performance,
+                                cumulative_performance_of_prev_year,
                                 entered_by,
                                 status
                             )
@@ -295,7 +310,9 @@ ORDER BY
                                 'JUNE',
                                 2026,
                                 :month_value,
+                                :prev_year_value,
                                 :cumulative_value,
+                                :prev_cum_value,
                                 :entered_by,
                                 :status
                             )
@@ -304,6 +321,7 @@ ORDER BY
                             "kpi_id": kpi.id,
                             "month_value": float(month_value) if month_value else None,
                             "cumulative_value": float(cumulative_value) if cumulative_value else None,
+                            "prev_cum_value": float(prev_cum_value) if prev_cum_value else None,
                             "entered_by": session["user_id"],
                             "status": status
                         }
@@ -319,12 +337,13 @@ ORDER BY
                 message="Draft Saved Successfully"
             )
 
-        return redirect("/submitted")
-
+        return redirect("/department?success=1")
+    success = request.args.get("success")
     return render_template(
-        "department_form.html",
-        kpis=kpis,
-        user_department=session["department_id"]
+       "department_form.html",
+    kpis=kpis,
+    user_department=session["department_id"],
+    success=success
         )
 
 
@@ -443,10 +462,28 @@ def approve_bulk():
     return jsonify({
         "message": f"{len(ids)} KPI(s) Approved Successfully"
     })
+@app.route("/return/<int:id>")
+def return_entry(id):
+
+    db.session.execute(
+        db.text("""
+            UPDATE monthly_data
+            SET status = 'RETURNED'
+            WHERE id = :id
+        """),
+        {
+            "id": id
+        }
+    )
+
+    db.session.commit()
+
+    return redirect("/hod")
+
 @app.route("/nodal")
 def nodal():
 
-    if "user_id" not in session :
+    if "user_id" not in session:
         return redirect("/login")
 
     if session["role"] != "LEVEL3":
