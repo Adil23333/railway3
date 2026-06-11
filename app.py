@@ -226,11 +226,13 @@ def department():
     except ValueError:
         selected_year = 2026
 
+    # Query for KPIs with their current data
     result = db.session.execute(
         db.text("""
             SELECT
                 k.*,
                 d.dept_name,
+                md.id as monthly_data_id,
                 md.performance_month,
                 md.cumulative_performance,
                 md.status,
@@ -264,6 +266,7 @@ def department():
 
     kpis = result.fetchall()
 
+    # Query for returned KPIs for the selected month/year only (with full data)
     returned_result = db.session.execute(
         db.text("""
             SELECT
@@ -271,23 +274,35 @@ def department():
                 md.kpi_id,
                 md.performance_month,
                 md.cumulative_performance,
+                md.previous_year_value,
+                md.cumulative_performance_of_prev_year,
                 md.status,
                 md.remarks,
                 md.month,
                 md.year,
-                k.kpi_name
+                k.kpi_name,
+                k.unit,
+                k.annual_target,
+                k.section_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             WHERE md.entered_by = :user_id
             AND md.status = 'RETURNED'
+            AND md.month = :month
+            AND md.year = :year
             ORDER BY md.created_at DESC
         """),
         {
-            "user_id": session["user_id"]
+            "user_id": session["user_id"],
+            "month": selected_month,
+            "year": selected_year
         }
     )
 
     returned_kpis = returned_result.fetchall()
+    
+    # Create a set of returned KPI IDs for easy lookup
+    returned_kpi_ids = {r.kpi_id for r in returned_kpis}
 
     if request.method == "POST":
         action = request.form.get("action")
@@ -317,6 +332,7 @@ def department():
                 prev_year_value = None
 
             if month_value is not None or cumulative_value is not None or prev_year_value is not None or prev_cum_value is not None:
+                # Check if there's an existing record
                 existing = db.session.execute(
                     db.text("""
                         SELECT id, status
@@ -335,7 +351,13 @@ def department():
                 ).fetchone()
 
                 if existing:
+                    # Determine new status based on current status and action
                     new_status = status
+                    if existing.status == 'RETURNED' and status == 'DRAFT':
+                        new_status = 'DRAFT'
+                    elif existing.status == 'RETURNED' and status == 'SUBMITTED':
+                        new_status = 'SUBMITTED'
+                    
                     db.session.execute(
                         db.text("""
                             UPDATE monthly_data
@@ -358,6 +380,7 @@ def department():
                         }
                     )
                 else:
+                    # Insert new record
                     db.session.execute(
                         db.text("""
                             INSERT INTO monthly_data
@@ -399,8 +422,9 @@ def department():
                     )
 
         db.session.commit()
-
-        # Refresh returned_kpis after commit
+        
+        # Refresh the data after update
+        # Re-query for updated returned KPIs
         returned_result = db.session.execute(
             db.text("""
                 SELECT
@@ -408,20 +432,32 @@ def department():
                     md.kpi_id,
                     md.performance_month,
                     md.cumulative_performance,
+                    md.previous_year_value,
+                    md.cumulative_performance_of_prev_year,
                     md.status,
                     md.remarks,
                     md.month,
                     md.year,
-                    k.kpi_name
+                    k.kpi_name,
+                    k.unit,
+                    k.annual_target,
+                    k.section_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
                 WHERE md.entered_by = :user_id
                 AND md.status = 'RETURNED'
+                AND md.month = :month
+                AND md.year = :year
                 ORDER BY md.created_at DESC
             """),
-            {"user_id": session["user_id"]}
+            {
+                "user_id": session["user_id"],
+                "month": selected_month,
+                "year": selected_year
+            }
         )
         returned_kpis = returned_result.fetchall()
+        returned_kpi_ids = {r.kpi_id for r in returned_kpis}
 
         message = "Draft Saved Successfully" if status == "DRAFT" else "Submitted Successfully"
         
@@ -429,6 +465,7 @@ def department():
             "department_form.html",
             kpis=kpis,
             returned_kpis=returned_kpis,
+            returned_kpi_ids=returned_kpi_ids,
             user_department=session["department_id"],
             message=message,
             selected_month=selected_month,
@@ -439,6 +476,7 @@ def department():
         "department_form.html",
         kpis=kpis,
         returned_kpis=returned_kpis,
+        returned_kpi_ids=returned_kpi_ids,
         user_department=session["department_id"],
         selected_month=selected_month,
         selected_year=selected_year
@@ -633,7 +671,9 @@ def nodal():
             SELECT
                 md.id,
                 md.performance_month,
+                md.previous_year_value,
                 md.cumulative_performance,
+                md.cumulative_performance_of_prev_year,
                 md.status,
                 md.remarks,
                 k.kpi_name,
@@ -679,7 +719,6 @@ def adrm():
     except ValueError:
         selected_year = 2026
 
-    # UPDATED QUERY: Added previous_year_value and cumulative_performance_of_prev_year columns
     result = db.session.execute(
         db.text("""
             SELECT
@@ -689,9 +728,7 @@ def adrm():
                 md.status,
                 md.remarks,
                 k.kpi_name,
-                d.dept_name,
-                COALESCE(md.previous_year_value, 0) as previous_year_value,
-                COALESCE(md.cumulative_performance_of_prev_year, 0) as previous_year_cumulative
+                d.dept_name
             FROM monthly_data md
             JOIN kpis k
             ON md.kpi_id = k.id
@@ -700,7 +737,7 @@ def adrm():
             WHERE md.status = 'FORWARDED_TO_ADRM'
             AND md.month = :month
             AND md.year = :year
-            ORDER BY k.display_order, k.id
+            ORDER BY k.id
         """),
         {
             "month": selected_month,
@@ -709,82 +746,13 @@ def adrm():
     )
 
     rows = result.fetchall()
-    
-    # Convert to list of dictionaries for easier template access
-    rows_list = []
-    for row in rows:
-        row_dict = {
-            'id': row.id,
-            'performance_month': row.performance_month if row.performance_month is not None else '-',
-            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
-            'status': row.status,
-            'remarks': row.remarks,
-            'kpi_name': row.kpi_name,
-            'dept_name': row.dept_name,
-            'previous_year_value': row.previous_year_value if row.previous_year_value and row.previous_year_value != 0 else '-',
-            'previous_year_cumulative': row.previous_year_cumulative if row.previous_year_cumulative and row.previous_year_cumulative != 0 else '-'
-        }
-        rows_list.append(row_dict)
 
     return render_template(
         "adrm.html",
-        rows=rows_list,
+        rows=rows,
         selected_month=selected_month,
         selected_year=selected_year
     )
-
-# ADRM Return/Reject KPI with remarks
-@app.route("/return_kpi/<int:id>", methods=["POST"])
-def return_kpi(id):
-    """ADRM can return a KPI back to employee with remarks"""
-    if "user_id" not in session:
-        return jsonify({"success": False, "message": "Login required"}), 401
-    
-    if session["role"] != "LEVEL4":
-        return jsonify({"success": False, "message": "Access Denied. Only ADRM can return KPIs."}), 403
-    
-    try:
-        data = request.get_json()
-        remarks = data.get("remarks", "")
-        
-        if not remarks:
-            return jsonify({"success": False, "message": "Remarks are required for returning the application"}), 400
-        
-        # Update the KPI status to RETURNED and store remarks
-        result = db.session.execute(
-            db.text("""
-                UPDATE monthly_data
-                SET status = 'RETURNED',
-                    remarks = :remarks
-                WHERE id = :id 
-                AND status IN ('FORWARDED_TO_ADRM', 'APPROVED')
-                RETURNING id, kpi_id, entered_by
-            """),
-            {
-                "id": id,
-                "remarks": remarks
-            }
-        )
-        
-        updated = result.fetchone()
-        
-        if not updated:
-            return jsonify({
-                "success": False, 
-                "message": "KPI not found or not in a valid state for return (status must be FORWARDED_TO_ADRM or APPROVED)"
-            }), 400
-        
-        db.session.commit()
-        
-        return jsonify({
-            "success": True,
-            "message": f"KPI has been returned to the employee with remarks: {remarks}"
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error in return_kpi: {str(e)}")
-        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
 
 @app.route("/forward_to_drm/<int:id>")
 def forward_to_drm(id):
@@ -833,6 +801,91 @@ def forward_to_adrm(id):
         return f"Error: {str(e)}", 500
     
     return redirect("/nodal")
+
+@app.route("/reject_to_employee/<int:id>", methods=["GET", "POST"])
+def reject_to_employee(id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session["role"] != "LEVEL3":
+        return "Access Denied"
+
+    if request.method == "POST":
+        remarks = request.form.get("remarks", "")
+
+        try:
+            # Get the current record to know which month/year to preserve
+            current_record = db.session.execute(
+                db.text("""
+                    SELECT month, year, kpi_id, entered_by
+                    FROM monthly_data 
+                    WHERE id = :id AND status = 'APPROVED'
+                """),
+                {"id": id}
+            ).fetchone()
+            
+            if not current_record:
+                return "Record not found or not in APPROVED status", 404
+            
+            # Update the status to RETURNED
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET
+                        status = 'RETURNED',
+                        remarks = :remarks
+                    WHERE id = :id
+                    AND status = 'APPROVED'
+                """),
+                {
+                    "id": id,
+                    "remarks": remarks
+                }
+            )
+
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            return f"Error : {str(e)}"
+
+        return redirect("/nodal")
+
+    # GET request - show the return form (using return_form.html)
+    result = db.session.execute(
+        db.text("""
+            SELECT
+                md.id,
+                md.performance_month,
+                md.cumulative_performance,
+                md.previous_year_value,
+                md.cumulative_performance_of_prev_year,
+                k.kpi_name
+            FROM monthly_data md
+            JOIN kpis k
+            ON md.kpi_id = k.id
+            WHERE md.id = :id
+        """),
+        {"id": id}
+    )
+
+    row = result.fetchone()
+    
+    # Create a kpi object compatible with return_form.html
+    # The return_form.html expects a 'kpi' variable with id, kpi_name, performance_month, cumulative_performance
+    class KpiObject:
+        def __init__(self, data):
+            self.id = data.id
+            self.kpi_name = data.kpi_name
+            self.performance_month = data.performance_month
+            self.cumulative_performance = data.cumulative_performance
+    
+    kpi = KpiObject(row)
+
+    return render_template(
+        "return_form.html",
+        kpi=kpi
+    )
 
 @app.route("/admin/kpis")
 def manage_kpis():
