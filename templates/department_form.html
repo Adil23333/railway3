@@ -53,7 +53,7 @@
  .app-name { font-size: .78rem; font-weight: 600; color: #c8d8f0; letter-spacing: .04em; text-transform: uppercase; }
  .app-sub { font-size: .65rem; color: rgba(255,255,255,.5); }
  
- .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; }
+ .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; max-width: 1400px; margin: 0 auto; width: 100%; }
  
  .breadcrumb-bar {
  background: #fff;
@@ -129,6 +129,7 @@
  display: inline-flex;
  align-items: center;
  gap: 0.5rem;
+ transition: all 0.2s ease;
  }
  .btn-resubmit:hover { background: var(--rly-mid); transform: translateY(-1px); }
  
@@ -144,6 +145,7 @@
  display: inline-flex;
  align-items: center;
  gap: 0.5rem;
+ transition: all 0.2s ease;
  }
  .btn-remove-return:hover { background: #bb2d3b; transform: translateY(-1px); }
  .btn-remove-return:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.6; }
@@ -172,28 +174,33 @@
  padding: .7rem .9rem;
  border: 1px solid #d6dee8;
  text-align: center;
+ vertical-align: middle;
  }
  .kpi-table tbody td {
  padding: .65rem .9rem;
  text-align: center;
  border: 1px solid #d6dee8;
+ vertical-align: middle;
  }
- .kpi-table tbody td:nth-child(2) { text-align: left; }
+ .kpi-table tbody td:first-child { font-weight: 600; background: #fafcfd; }
+ .kpi-table tbody td:nth-child(2) { text-align: left; font-weight: 500; }
  
  .kpi-input {
  width: 100%;
- min-width: 90px;
+ min-width: 100px;
  padding: .35rem .55rem;
  font-size: .82rem;
- font-weight: 600;
+ font-weight: 500;
  background: #f8fafc;
  border: 1px solid var(--border);
  border-radius: 5px;
  text-align: center;
  outline: none;
+ transition: all 0.15s ease;
  }
- .kpi-input:focus { border-color: var(--rly-light); background: #fff; }
+ .kpi-input:focus { border-color: var(--rly-light); background: #fff; box-shadow: 0 0 0 2px rgba(0,85,165,0.1); }
  .kpi-input[readonly] { background: #e9ecef; color: #6c757d; cursor: not-allowed; }
+ .kpi-input.returned-highlight { border-color: var(--return-border); background: #fffbf0; }
  
  .btn-area {
  display: flex;
@@ -202,6 +209,7 @@
  padding: 1rem 1.1rem;
  background: #f7f9fc;
  border-top: 1px solid var(--border);
+ flex-wrap: wrap;
  }
  .btn-draft {
  background: #fff;
@@ -212,6 +220,7 @@
  font-size: .82rem;
  font-weight: 700;
  cursor: pointer;
+ transition: all 0.2s ease;
  }
  .btn-draft:hover { background: var(--rly-blue); color: #fff; }
  .btn-submit {
@@ -223,18 +232,20 @@
  font-size: .82rem;
  font-weight: 700;
  cursor: pointer;
+ transition: all 0.2s ease;
  }
- .btn-submit:hover { background: var(--rly-mid); }
+ .btn-submit:hover { background: var(--rly-mid); transform: translateY(-1px); }
  .btn-hint { font-size: .72rem; color: #5c6b7a; margin-left: auto; }
  
  .section-header-row td {
  background: #fff3b0;
  color: #c1121f;
  font-weight: 700;
- font-size: 18px;
+ font-size: 16px;
  text-transform: uppercase;
- padding: 18px 15px !important;
+ padding: 12px 15px !important;
  text-align: center !important;
+ letter-spacing: 0.5px;
  }
  
  .site-footer {
@@ -243,12 +254,14 @@
  padding: .5rem 1.5rem;
  display: flex;
  justify-content: space-between;
+ flex-wrap: wrap;
+ margin-top: auto;
  }
  .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
  
  .user-info { margin-left: auto; text-align: right; color: white; }
  .user-info .welcome { font-size: 14px; font-weight: 700; }
- .user-info .empid { font-size: 12px; color: #d4a017; }
+ .user-info .empid { font-size: 11px; color: #d4a017; }
  
  .toast-notification {
  position: fixed;
@@ -263,6 +276,14 @@
  to { transform: translateX(0); opacity: 1; }
  }
  .table-warning { background-color: #fff3cd !important; }
+ 
+ .filter-section {
+ background: white;
+ border-radius: 8px;
+ padding: 15px;
+ margin-bottom: 20px;
+ border: 1px solid var(--border);
+ }
  </style>
 </head>
 <body>
@@ -289,8 +310,8 @@
  <div class="app-sub">Palakkad Division | Southern Railway</div>
  </div>
  <div class="user-info">
-    <div class="welcome">Welcome, {{ session.username }}</div>
-    <div class="empid">Employee ID : {{ session.user_id }}</div>
+    <div class="welcome">Welcome, {{ session.get('username', 'User') }}</div>
+    <div class="empid">Employee ID : {{ session.get('user_id', 'N/A') }}</div>
  </div>
 </nav>
 
@@ -306,47 +327,49 @@
  
  <div class="page-heading mb-3">
  <h4><i class="fas fa-pencil-alt me-2" style="color:var(--rly-gold)"></i>Department KPI Entry</h4>
- <p>Enter monthly and cumulative performance data for your department KPIs</p>
+ <p class="text-muted small">Enter monthly and cumulative performance data for your department KPIs. Fields marked with <span class="text-warning">highlighted border</span> indicate returned KPIs requiring correction.</p>
  </div>
 
 {% if message %}
-<div class="alert alert-success alert-dismissible fade show mb-3">
+<div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
     <i class="fas fa-check-circle me-2"></i>{{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
 
+<!-- Returned KPIs Section -->
 {% if returned_kpis and returned_kpis|length > 0 %}
 <div class="returned-section mb-4" id="returnedSection">
     <div class="returned-header">
-        <i class="fas fa-undo-alt"></i>
+        <i class="fas fa-undo-alt fa-lg"></i>
         <div>
-            <h5 class="mb-0">Returned Applications Requiring Action</h5>
-            <p class="mb-0">Please review the HOD's remarks, update the data, and resubmit</p>
+            <h5 class="mb-0">⚠️ Returned Applications Requiring Action ({{ returned_kpis|length }})</h5>
+            <p class="mb-0">Please review the remarks, update the data, and resubmit</p>
         </div>
     </div>
     <div class="returned-items-list" id="returnedItemsList">
         {% for returned in returned_kpis %}
         <div class="returned-item" id="returned-item-{{ returned.id }}" data-id="{{ returned.id }}">
-            <div class="d-flex justify-content-between align-items-start">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                <div class="flex-grow-1" style="min-width: 200px;">
+                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                         <span class="badge-returned"><i class="fas fa-clock"></i> Returned for Revision</span>
                         <span class="text-muted small"><i class="fas fa-calendar-alt"></i> {{ returned.month }} {{ returned.year }}</span>
+                        <span class="badge bg-warning text-dark"><i class="fas fa-flag"></i> Action Required</span>
                     </div>
-                    <div class="returned-kpi-name">{{ returned.kpi_name }}</div>
+                    <div class="returned-kpi-name"><i class="fas fa-chart-line me-2"></i>{{ returned.kpi_name }}</div>
                     <div class="returned-remarks mt-2">
-                        <i class="fas fa-comment-dots"></i>
-                        <strong>Remarks from HOD:</strong>
-                        <p class="returned-remarks-text mt-1 mb-0">{{ returned.remarks or 'No specific remarks provided.' }}</p>
+                        <i class="fas fa-comment-dots me-1"></i>
+                        <strong>Remarks:</strong>
+                        <p class="returned-remarks-text mt-1 mb-0">{{ returned.remarks or 'No specific remarks provided. Please review your data.' }}</p>
                     </div>
                 </div>
-                <div class="ms-3 d-flex gap-2">
+                <div class="ms-3 mt-2 mt-sm-0 d-flex gap-2">
                     <button class="btn-resubmit" onclick="scrollToKPI({{ returned.kpi_id }})">
                         <i class="fas fa-edit me-1"></i> Review & Update
                     </button>
                     <button class="btn-remove-return" data-id="{{ returned.id }}" data-name="{{ returned.kpi_name }}">
-                        <i class="fas fa-trash-alt me-1"></i> Remove
+                        <i class="fas fa-trash-alt me-1"></i> Remove Entry
                     </button>
                 </div>
             </div>
@@ -355,111 +378,199 @@
     </div>
 </div>
 {% else %}
-<div class="alert alert-info mb-3">
-    <i class="fas fa-info-circle me-2"></i>No returned applications at this time.
+<div class="alert alert-info mb-3" style="background: #e8f4fd; border-left: 4px solid #0d6efd;">
+    <i class="fas fa-info-circle me-2"></i>No returned applications at this time. All KPIs are in good standing.
 </div>
 {% endif %}
 
 <form method="POST" id="kpiForm">
-<div class="row mb-3">
-    <div class="col-md-3">
-        <label class="form-label">Month</label>
-        <select name="month" class="form-select">
-            <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
-            <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
-            <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
-            <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>APRIL</option>
-            <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>MAY</option>
-            <option value="JUNE" {% if selected_month == 'JUNE' %}selected{% endif %}>JUNE</option>
-            <option value="JULY" {% if selected_month == 'JULY' %}selected{% endif %}>JULY</option>
-            <option value="AUGUST" {% if selected_month == 'AUGUST' %}selected{% endif %}>AUGUST</option>
-            <option value="SEPTEMBER" {% if selected_month == 'SEPTEMBER' %}selected{% endif %}>SEPTEMBER</option>
-            <option value="OCTOBER" {% if selected_month == 'OCTOBER' %}selected{% endif %}>OCTOBER</option>
-            <option value="NOVEMBER" {% if selected_month == 'NOVEMBER' %}selected{% endif %}>NOVEMBER</option>
-            <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>    
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Year</label>
-        <select name="year" class="form-select">
-            {% for y in range(2024, 2031) %}
-                <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-        </select>
+<div class="filter-section">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-semibold"><i class="fas fa-calendar me-1"></i>Select Month</label>
+            <select name="month" class="form-select" onchange="this.form.submit()">
+                <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
+                <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
+                <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
+                <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>APRIL</option>
+                <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>MAY</option>
+                <option value="JUNE" {% if selected_month == 'JUNE' %}selected{% endif %}>JUNE</option>
+                <option value="JULY" {% if selected_month == 'JULY' %}selected{% endif %}>JULY</option>
+                <option value="AUGUST" {% if selected_month == 'AUGUST' %}selected{% endif %}>AUGUST</option>
+                <option value="SEPTEMBER" {% if selected_month == 'SEPTEMBER' %}selected{% endif %}>SEPTEMBER</option>
+                <option value="OCTOBER" {% if selected_month == 'OCTOBER' %}selected{% endif %}>OCTOBER</option>
+                <option value="NOVEMBER" {% if selected_month == 'NOVEMBER' %}selected{% endif %}>NOVEMBER</option>
+                <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>    
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-semibold"><i class="fas fa-calendar-alt me-1"></i>Select Year</label>
+            <select name="year" class="form-select" onchange="this.form.submit()">
+                {% for y in range(2024, 2031) %}
+                    <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <div class="text-muted small mt-2">
+                <i class="fas fa-lightbulb"></i> Tip: Save draft frequently to avoid data loss
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="table-card">
  <div class="table-card-header">
  <i class="fas fa-table" style="color:var(--rly-gold);"></i>
- <h6>KPI Performance Data Entry</h6>
+ <h6>KPI Performance Data Entry Form</h6>
  </div>
  <div class="table-responsive">
  <table class="kpi-table">
  <thead>
-  <tr><th>S.N</th><th>KPI</th><th>Unit</th><th>Annual Target</th><th>Previous Year</th><th>Performance For Month</th><th>Cumulative (YTD)</th><th>Prev Year Cumulative</th></tr>
+   <tr>
+    <th style="width: 5%">S.N</th>
+    <th style="width: 25%">KPI</th>
+    <th style="width: 8%">Unit</th>
+    <th style="width: 10%">Annual Target</th>
+    <th style="width: 12%">Prev Year Value</th>
+    <th style="width: 13%">Performance For Month</th>
+    <th style="width: 13%">Cumulative (YTD)</th>
+    <th style="width: 14%">Prev Year Cumulative</th>
+   </tr>
  </thead>
  <tbody>
  {% set current_section = namespace(value='') %}
+ {% set sn_counter = namespace(value=0) %}
  {% for kpi in kpis %}
     {% if current_section.value != kpi.section_name %}
-        <tr class="section-header-row"><td colspan="8">{{ kpi.section_name }}</td></tr>
+        <tr class="section-header-row">
+            <td colspan="8" style="text-align: center !important;">
+                <i class="fas fa-folder-open me-2"></i>{{ kpi.section_name }}
+            </td>
+        </tr>
         {% set current_section.value = kpi.section_name %}
+        {% set sn_counter.value = loop.index %}
     {% endif %}
-    <tr id="kpi-row-{{ kpi.id }}" {% if kpi.status == 'RETURNED' %}class="table-warning"{% endif %}>
-        <td class="sn-cell">{{ loop.index }}</td>
-        <td class="kpi-name-cell">{{ kpi.kpi_name }}</td>
-        <td class="unit-cell">{{ kpi.unit }}</td>
-        <td class="target-cell">{{ kpi.annual_target }}</td>
-        <td><input type="number" step="0.01" name="prev_{{ kpi.id }}" value="{{ kpi.previous_year_value or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
-        <td><input type="number" step="0.01" name="month_{{ kpi.id }}" value="{{ kpi.performance_month or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %} {% if kpi.status == 'RETURNED' %}style="border-color: var(--return-border); background: #fffbf0;"{% endif %}></td>
-        <td><input type="number" step="0.01" name="cum_{{ kpi.id }}" value="{{ kpi.cumulative_performance or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
-        <td><input type="number" step="0.01" name="prev_cum_{{ kpi.id }}" value="{{ kpi.previous_year_cumulative or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
-    </tr>
+    {% set is_returned = kpi.status == 'RETURNED' %}
+    <tr id="kpi-row-{{ kpi.id }}" {% if is_returned %}class="table-warning"{% endif %}>
+        <td class="sn-cell">{{ sn_counter.value }}{% set sn_counter.value = sn_counter.value + 1 %}</td>
+        <td class="kpi-name-cell"><strong>{{ kpi.kpi_name }}</strong></td>
+        <td class="unit-cell">{{ kpi.unit or '-' }}</td>
+        <td class="target-cell"><span class="badge bg-secondary">{{ kpi.annual_target or '-' }}</span></td>
+        <td>
+            <input type="number" step="0.01" name="prev_{{ kpi.id }}" 
+                   value="{{ kpi.previous_year_value or '' }}" 
+                   class="kpi-input" placeholder="0.00" 
+                   {% if kpi.department_id|string != user_department|string %}readonly{% endif %}>
+        </td>
+        <td>
+            <input type="number" step="0.01" name="month_{{ kpi.id }}" 
+                   value="{{ kpi.performance_month or '' }}" 
+                   class="kpi-input {% if is_returned %}returned-highlight{% endif %}" 
+                   placeholder="Enter value" 
+                   {% if kpi.department_id|string != user_department|string %}readonly{% endif %}>
+        </td>
+        <td>
+            <input type="number" step="0.01" name="cum_{{ kpi.id }}" 
+                   value="{{ kpi.cumulative_performance or '' }}" 
+                   class="kpi-input" placeholder="0.00" 
+                   {% if kpi.department_id|string != user_department|string %}readonly{% endif %}>
+        </td>
+        <td>
+            <input type="number" step="0.01" name="prev_cum_{{ kpi.id }}" 
+                   value="{{ kpi.previous_year_cumulative or '' }}" 
+                   class="kpi-input" placeholder="0.00" 
+                   {% if kpi.department_id|string != user_department|string %}readonly{% endif %}>
+        </td>
+     </tr>
  {% endfor %}
  </tbody>
  </table>
  </div>
  <div class="btn-area">
-    <button type="submit" name="action" value="draft" class="btn-draft"><i class="fas fa-save"></i> Save Draft</button>
-    <button type="submit" name="action" value="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Submit To HOD</button>
-    <span class="btn-hint"><i class="fas fa-info-circle me-1"></i>Save Draft to preserve data | Submit To HOD for final submission</span>
+    <button type="submit" name="action" value="draft" class="btn-draft" id="saveDraftBtn">
+        <i class="fas fa-save"></i> Save Draft
+    </button>
+    <button type="submit" name="action" value="submit" class="btn-submit" id="submitToHodBtn">
+        <i class="fas fa-paper-plane"></i> Submit To HOD
+    </button>
+    <span class="btn-hint">
+        <i class="fas fa-info-circle me-1"></i>
+        <strong>Save Draft:</strong> Preserve data without submitting | 
+        <strong>Submit To HOD:</strong> Final submission for approval
+    </span>
  </div>
 </div>
 </form>
 </div>
 
 <footer class="site-footer">
- <p>Palakkad Division | Southern Railway | Government of India</p>
- <p class="gov">Official Government Portal</p>
+ <p><i class="fas fa-train me-1"></i> Palakkad Division | Southern Railway | Government of India</p>
+ <p class="gov">Version 2.0 | Internal Use Only</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
-function showToast(message, type) {
+// Toast notification system
+function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toastContainer') || (() => {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    })();
+    
     const toast = document.createElement('div');
-    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-    toast.style.zIndex = '9999';
-    toast.style.minWidth = '300px';
-    toast.style.textAlign = 'center';
-    toast.style.zIndex = '10000';
-    toast.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    document.body.appendChild(toast);
-    setTimeout(() => { if(toast) toast.remove(); }, 3000);
+    toast.className = `alert alert-${type} alert-dismissible fade show`;
+    toast.style.animation = 'slideIn 0.3s ease';
+    toast.style.marginBottom = '10px';
+    toast.style.minWidth = '280px';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast && toast.remove) toast.remove();
+    }, 4000);
 }
 
-function scrollToKPI(kpiId) {
+// Scroll to KPI function for returned items
+window.scrollToKPI = function(kpiId) {
     const targetRow = document.getElementById(`kpi-row-${kpiId}`);
     if (targetRow) {
         targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetRow.style.transition = 'background 0.3s';
         targetRow.style.backgroundColor = '#fff3cd';
-        setTimeout(() => targetRow.style.backgroundColor = '', 3000);
+        setTimeout(() => {
+            targetRow.style.backgroundColor = '';
+        }, 3000);
+        
+        // Highlight the month input field
+        const monthInput = targetRow.querySelector('td:nth-child(6) input');
+        if (monthInput) {
+            monthInput.style.boxShadow = '0 0 0 2px #ffc107';
+            setTimeout(() => {
+                monthInput.style.boxShadow = '';
+            }, 2000);
+            monthInput.focus();
+        }
+        showToast(`Scrolling to "${targetRow.querySelector('.kpi-name-cell')?.innerText || 'KPI'}"`, 'info');
+    } else {
+        showToast('KPI row not found', 'warning');
     }
-}
+};
 
-// Global function to remove returned item
+// Remove returned item function
 window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
-    if (confirm(`⚠️ Remove "${kpiName}"?\n\nThis will DELETE this entry permanently. This action cannot be undone!`)) {
+    if (confirm(`⚠️ REMOVE ENTRY\n\nAre you sure you want to remove "${kpiName}"?\n\nThis will DELETE this KPI entry permanently.\nThis action cannot be undone!`)) {
         if (buttonElement) {
             buttonElement.disabled = true;
             buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
@@ -478,15 +589,12 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
             if (data.success) {
                 showToast(data.message || 'KPI removed successfully', 'success');
                 
-                // Remove the item from DOM
                 const itemElement = document.getElementById(`returned-item-${returnId}`);
                 if (itemElement) {
                     itemElement.style.transition = 'opacity 0.3s ease';
                     itemElement.style.opacity = '0';
                     setTimeout(() => {
                         itemElement.remove();
-                        
-                        // Check if any returned items remain
                         const remainingItems = document.querySelectorAll('.returned-item');
                         const returnedSection = document.getElementById('returnedSection');
                         
@@ -495,19 +603,17 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
                             returnedSection.style.opacity = '0';
                             setTimeout(() => {
                                 returnedSection.remove();
-                                // Show info message
                                 const infoDiv = document.createElement('div');
                                 infoDiv.className = 'alert alert-info mb-3';
                                 infoDiv.style.background = '#e8f4fd';
                                 infoDiv.style.borderLeft = '4px solid #0d6efd';
-                                infoDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>No returned applications at this time.';
-                                const breadcrumb = document.querySelector('.breadcrumb-bar');
-                                if (breadcrumb) {
-                                    breadcrumb.insertAdjacentElement('afterend', infoDiv);
+                                infoDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>No returned applications at this time. All KPIs are in good standing.';
+                                const filterSection = document.querySelector('.filter-section');
+                                if (filterSection) {
+                                    filterSection.insertAdjacentElement('beforebegin', infoDiv);
                                 }
                             }, 300);
                         } else {
-                            // Reattach event handlers to remaining remove buttons
                             attachRemoveButtonHandlers();
                         }
                     }, 300);
@@ -515,10 +621,10 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
                     location.reload();
                 }
             } else {
-                showToast(data.message || 'Failed to remove', 'danger');
+                showToast(data.message || 'Failed to remove entry', 'danger');
                 if (buttonElement) {
                     buttonElement.disabled = false;
-                    buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove';
+                    buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove Entry';
                 }
             }
         })
@@ -527,21 +633,21 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
             showToast('Error: ' + error.message, 'danger');
             if (buttonElement) {
                 buttonElement.disabled = false;
-                buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove';
+                buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove Entry';
             }
         });
     }
 };
 
-// Function to attach event handlers to remove buttons
+// Attach event handlers to remove buttons
 function attachRemoveButtonHandlers() {
     const removeButtons = document.querySelectorAll('.btn-remove-return');
     removeButtons.forEach(btn => {
-        // Remove existing event listener to avoid duplicates
-        btn.removeEventListener('click', btn._listener);
-        
-        // Create new listener
-        const listener = function(e) {
+        const newBtn = btn.cloneNode(true);
+        if (btn.parentNode) {
+            btn.parentNode.replaceChild(newBtn, btn);
+        }
+        newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             const returnId = this.getAttribute('data-id');
@@ -549,41 +655,41 @@ function attachRemoveButtonHandlers() {
             if (returnId && kpiName) {
                 window.removeReturnedItem(returnId, kpiName, this);
             }
-        };
-        
-        // Store listener reference and add event
-        btn._listener = listener;
-        btn.addEventListener('click', listener);
+        });
     });
 }
 
-// Initialize event handlers when DOM is ready
+// Form submission with confirmation
 document.addEventListener('DOMContentLoaded', function() {
     attachRemoveButtonHandlers();
     
-    // Also handle dynamically added elements (if any)
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.addedNodes.length) {
-                attachRemoveButtonHandlers();
+    const kpiForm = document.getElementById('kpiForm');
+    if (kpiForm) {
+        kpiForm.addEventListener('submit', function(e) {
+            const submitter = e.submitter;
+            if (submitter && submitter.value === 'submit') {
+                const confirmMsg = '✅ SUBMIT TO HOD\n\nAre you sure you want to submit these KPIs to HOD?\n\nOnce submitted:\n• You cannot modify the data until HOD returns it\n• HOD will review and approve or return for corrections\n\nDo you wish to proceed?';
+                if (!confirm(confirmMsg)) {
+                    e.preventDefault();
+                    return false;
+                }
+                showToast('Submitting KPIs to HOD...', 'info');
+            } else if (submitter && submitter.value === 'draft') {
+                showToast('Saving draft...', 'info');
             }
         });
-    });
+    }
     
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Auto-hide alerts after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.alert-success').forEach(alert => {
+            const bsAlert = new bootstrap.Alert(alert);
+            setTimeout(() => bsAlert.close(), 3000);
+        });
+    }, 1000);
+    
+    console.log('Department KPI Entry form loaded - Fixed version');
 });
-
-// Form submission confirmation
-document.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-        const btn = e.submitter;
-        if (btn && btn.value === 'submit' && !confirm('Submit KPIs to HOD? Once submitted, you cannot modify until returned.')) {
-            e.preventDefault();
-        }
-    });
-});
-
-console.log('Department KPI Entry form loaded');
 </script>
 </body>
 </html>

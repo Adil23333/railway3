@@ -400,6 +400,7 @@ def department():
 
         db.session.commit()
 
+        # Refresh returned_kpis after commit
         returned_result = db.session.execute(
             db.text("""
                 SELECT
@@ -678,6 +679,7 @@ def adrm():
     except ValueError:
         selected_year = 2026
 
+    # UPDATED QUERY: Added previous_year_value and cumulative_performance_of_prev_year columns
     result = db.session.execute(
         db.text("""
             SELECT
@@ -687,7 +689,9 @@ def adrm():
                 md.status,
                 md.remarks,
                 k.kpi_name,
-                d.dept_name
+                d.dept_name,
+                COALESCE(md.previous_year_value, 0) as previous_year_value,
+                COALESCE(md.cumulative_performance_of_prev_year, 0) as previous_year_cumulative
             FROM monthly_data md
             JOIN kpis k
             ON md.kpi_id = k.id
@@ -696,7 +700,7 @@ def adrm():
             WHERE md.status = 'FORWARDED_TO_ADRM'
             AND md.month = :month
             AND md.year = :year
-            ORDER BY k.id
+            ORDER BY k.display_order, k.id
         """),
         {
             "month": selected_month,
@@ -705,13 +709,82 @@ def adrm():
     )
 
     rows = result.fetchall()
+    
+    # Convert to list of dictionaries for easier template access
+    rows_list = []
+    for row in rows:
+        row_dict = {
+            'id': row.id,
+            'performance_month': row.performance_month if row.performance_month is not None else '-',
+            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
+            'status': row.status,
+            'remarks': row.remarks,
+            'kpi_name': row.kpi_name,
+            'dept_name': row.dept_name,
+            'previous_year_value': row.previous_year_value if row.previous_year_value and row.previous_year_value != 0 else '-',
+            'previous_year_cumulative': row.previous_year_cumulative if row.previous_year_cumulative and row.previous_year_cumulative != 0 else '-'
+        }
+        rows_list.append(row_dict)
 
     return render_template(
         "adrm.html",
-        rows=rows,
+        rows=rows_list,
         selected_month=selected_month,
         selected_year=selected_year
     )
+
+# ADRM Return/Reject KPI with remarks
+@app.route("/return_kpi/<int:id>", methods=["POST"])
+def return_kpi(id):
+    """ADRM can return a KPI back to employee with remarks"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Login required"}), 401
+    
+    if session["role"] != "LEVEL4":
+        return jsonify({"success": False, "message": "Access Denied. Only ADRM can return KPIs."}), 403
+    
+    try:
+        data = request.get_json()
+        remarks = data.get("remarks", "")
+        
+        if not remarks:
+            return jsonify({"success": False, "message": "Remarks are required for returning the application"}), 400
+        
+        # Update the KPI status to RETURNED and store remarks
+        result = db.session.execute(
+            db.text("""
+                UPDATE monthly_data
+                SET status = 'RETURNED',
+                    remarks = :remarks
+                WHERE id = :id 
+                AND status IN ('FORWARDED_TO_ADRM', 'APPROVED')
+                RETURNING id, kpi_id, entered_by
+            """),
+            {
+                "id": id,
+                "remarks": remarks
+            }
+        )
+        
+        updated = result.fetchone()
+        
+        if not updated:
+            return jsonify({
+                "success": False, 
+                "message": "KPI not found or not in a valid state for return (status must be FORWARDED_TO_ADRM or APPROVED)"
+            }), 400
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"KPI has been returned to the employee with remarks: {remarks}"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in return_kpi: {str(e)}")
+        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
 
 @app.route("/forward_to_drm/<int:id>")
 def forward_to_drm(id):
