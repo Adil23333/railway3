@@ -177,26 +177,40 @@ def remove_return(id):
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Login required"}), 401
     
-    # Verify that this return entry belongs to the logged-in user
-    result = db.session.execute(
-        db.text("""
-            SELECT id FROM monthly_data 
-            WHERE id = :id AND entered_by = :user_id AND status = 'RETURNED'
-        """),
-        {"id": id, "user_id": session["user_id"]}
-    )
-    
-    if not result.fetchone():
-        return jsonify({"success": False, "message": "Unauthorized or entry not found"}), 403
-    
-    # Delete the returned entry
-    db.session.execute(
-        db.text("DELETE FROM monthly_data WHERE id = :id"),
-        {"id": id}
-    )
-    db.session.commit()
-    
-    return jsonify({"success": True, "message": "Returned KPI removed successfully"})
+    try:
+        # First verify that this return entry belongs to the logged-in user and has RETURNED status
+        result = db.session.execute(
+            db.text("""
+                SELECT id, kpi_id, month, year 
+                FROM monthly_data 
+                WHERE id = :id 
+                AND entered_by = :user_id 
+                AND status = 'RETURNED'
+            """),
+            {"id": id, "user_id": session["user_id"]}
+        )
+        
+        record = result.fetchone()
+        
+        if not record:
+            return jsonify({"success": False, "message": "Record not found or you don't have permission to delete it"}), 403
+        
+        # Delete the returned entry
+        db.session.execute(
+            db.text("DELETE FROM monthly_data WHERE id = :id"),
+            {"id": id}
+        )
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Returned KPI removed successfully. You can now enter fresh data."
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error removing returned item: {str(e)}")
+        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
 
 @app.route("/department", methods=["GET", "POST"])
 def department():
@@ -212,7 +226,6 @@ def department():
     except ValueError:
         selected_year = 2026
 
-    # Main query for KPIs
     result = db.session.execute(
         db.text("""
             SELECT
@@ -251,7 +264,6 @@ def department():
 
     kpis = result.fetchall()
 
-    # Query for returned KPIs - NO month/year filter to show ALL returned applications
     returned_result = db.session.execute(
         db.text("""
             SELECT
@@ -323,7 +335,6 @@ def department():
                 ).fetchone()
 
                 if existing:
-                    # If it was returned and we're submitting, clear the remarks and set to submitted
                     new_status = status
                     db.session.execute(
                         db.text("""
@@ -389,7 +400,6 @@ def department():
 
         db.session.commit()
 
-        # Refresh returned_kpis after submission
         returned_result = db.session.execute(
             db.text("""
                 SELECT
@@ -424,7 +434,6 @@ def department():
             selected_year=selected_year
         )
 
-    # GET request
     return render_template(
         "department_form.html",
         kpis=kpis,
@@ -451,6 +460,7 @@ def hod():
     except ValueError:
         selected_year = 2026
 
+    # Query to get all submitted KPIs with previous year data
     result = db.session.execute(
         db.text("""
             SELECT
@@ -462,23 +472,21 @@ def hod():
                 md.year,
                 md.remarks,
                 md.created_at,
+                COALESCE(md.previous_year_value, 0) as previous_year_value,
+                COALESCE(md.cumulative_performance_of_prev_year, 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
-                k.unit,
+                COALESCE(k.unit, '') as unit,
                 k.annual_target,
                 k.section_name,
                 d.dept_name
             FROM monthly_data md
-            JOIN kpis k
-            ON md.kpi_id = k.id
-            JOIN departments d
-            ON k.department_id = d.id
+            JOIN kpis k ON md.kpi_id = k.id
+            JOIN departments d ON k.department_id = d.id
             WHERE md.status = 'SUBMITTED'
             AND k.department_id = :department_id
-            AND md.month = :month
+            AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
-            ORDER BY
-                k.display_order,
-                k.id
+            ORDER BY k.display_order, k.id
         """),
         {
             "department_id": department_id,
@@ -488,32 +496,35 @@ def hod():
     )
 
     rows = result.fetchall()
-
+    
+    # Convert to list of dictionaries
+    rows_list = []
+    for row in rows:
+        row_dict = {
+            'id': row.id,
+            'performance_month': row.performance_month if row.performance_month is not None else '-',
+            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
+            'status': row.status,
+            'month': row.month,
+            'year': row.year,
+            'remarks': row.remarks,
+            'created_at': row.created_at,
+            'previous_year_value': row.previous_year_value if row.previous_year_value and row.previous_year_value != 0 else 'Not Available',
+            'cumulative_performance_of_prev_year': row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year and row.cumulative_performance_of_prev_year != 0 else 'Not Available',
+            'kpi_name': row.kpi_name,
+            'unit': row.unit,
+            'annual_target': row.annual_target,
+            'section_name': row.section_name,
+            'dept_name': row.dept_name
+        }
+        rows_list.append(row_dict)
+    
     return render_template(
         "hod_review.html",
-        rows=rows,
+        rows=rows_list,
         selected_month=selected_month,
         selected_year=selected_year
     )
-
-@app.route("/approve/<int:id>")
-def approve(id):
-    if "user_id" not in session:
-        return redirect("/login")
-    
-    if session["role"] != "LEVEL2":
-        return "Access Denied"
-    
-    db.session.execute(
-        db.text("""
-            UPDATE monthly_data
-            SET status = 'APPROVED'
-            WHERE id = :id
-        """),
-        {"id": id}
-    )
-    db.session.commit()
-    return redirect("/hod")
 
 @app.route("/approve_bulk", methods=["POST"])
 def approve_bulk():
@@ -524,25 +535,33 @@ def approve_bulk():
         return jsonify({"message": "Access Denied"}), 403
 
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Invalid request data"}), 400
+    
     ids = data.get("ids", [])
 
     if not ids:
         return jsonify({"message": "No KPI Selected"}), 400
 
-    for id in ids:
-        db.session.execute(
-            db.text("""
-                UPDATE monthly_data
-                SET status = 'APPROVED'
-                WHERE id = :id
-            """),
-            {"id": id}
-        )
+    ids = [int(id_val) for id_val in ids]
 
-    db.session.commit()
-    return jsonify({
-        "message": f"{len(ids)} KPI(s) Approved Successfully"
-    })
+    try:
+        for id_val in ids:
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET status = 'APPROVED'
+                    WHERE id = :id AND status = 'SUBMITTED'
+                """),
+                {"id": id_val}
+            )
+        db.session.commit()
+        return jsonify({
+            "message": f"{len(ids)} KPI(s) Approved Successfully"
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Error: {str(e)}"}), 500
 
 @app.route("/return/<int:id>", methods=["GET", "POST"])
 def return_entry(id):
@@ -555,22 +574,26 @@ def return_entry(id):
     if request.method == "POST":
         remarks = request.form.get("remarks", "")
         
-        db.session.execute(
-            db.text("""
-                UPDATE monthly_data
-                SET status = 'RETURNED',
-                    remarks = :remarks
-                WHERE id = :id
-            """),
-            {
-                "id": id,
-                "remarks": remarks
-            }
-        )
-        db.session.commit()
-        return redirect("/hod")
+        try:
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET status = 'RETURNED',
+                        remarks = :remarks
+                    WHERE id = :id AND status = 'SUBMITTED'
+                """),
+                {
+                    "id": id,
+                    "remarks": remarks
+                }
+            )
+            db.session.commit()
+            return redirect("/hod")
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {str(e)}", 500
     
-    # GET request - show the remark form
+    # GET request - show the return form
     result = db.session.execute(
         db.text("""
             SELECT 
@@ -586,106 +609,7 @@ def return_entry(id):
     )
     kpi = result.fetchone()
     
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Return KPI - Add Remarks</title>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-        <style>
-            :root {{
-                --rly-blue: #003366;
-                --rly-gold: #d4a017;
-            }}
-            body {{
-                background: #eef2f7;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }}
-            .card-header {{
-                background: var(--rly-blue);
-                color: white;
-            }}
-            .btn-submit {{
-                background: var(--rly-blue);
-                color: white;
-            }}
-            .btn-submit:hover {{
-                background: #004080;
-            }}
-            .kpi-info {{
-                background: #f8f9fa;
-                border-left: 4px solid var(--rly-gold);
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="container mt-5">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card shadow">
-                        <div class="card-header">
-                            <h4 class="mb-0">
-                                <i class="fas fa-undo-alt me-2"></i>
-                                Return KPI for Revision
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info kpi-info">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <strong><i class="fas fa-chart-line me-1"></i> KPI:</strong> {kpi.kpi_name}
-                                    </div>
-                                    <div class="col-md-6 mt-2">
-                                        <strong><i class="fas fa-calendar-alt me-1"></i> Monthly Performance:</strong> {kpi.performance_month if kpi.performance_month else 'Not entered'}
-                                    </div>
-                                    <div class="col-md-6 mt-2">
-                                        <strong><i class="fas fa-chart-bar me-1"></i> Cumulative Performance:</strong> {kpi.cumulative_performance if kpi.cumulative_performance else 'Not entered'}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <form method="POST">
-                                <div class="mb-3">
-                                    <label for="remarks" class="form-label">
-                                        <i class="fas fa-comment-dots me-1"></i>
-                                        Remarks / Reason for Return <span class="text-danger">*</span>
-                                    </label>
-                                    <textarea 
-                                        class="form-control" 
-                                        id="remarks" 
-                                        name="remarks" 
-                                        rows="5" 
-                                        placeholder="Please provide detailed reason for returning this KPI. Include specific feedback and required corrections..."
-                                        required
-                                    ></textarea>
-                                    <div class="form-text text-muted mt-2">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        These remarks will be visible to the department user when they view this KPI.
-                                    </div>
-                                </div>
-                                
-                                <div class="d-flex justify-content-between mt-4">
-                                    <a href="/hod" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i> Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-submit">
-                                        <i class="fas fa-paper-plane me-1"></i> Submit Return
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    </body>
-    </html>
-    """
+    return render_template("return_form.html", kpi=kpi)
 
 @app.route("/nodal")
 def nodal():
@@ -797,15 +721,20 @@ def forward_to_drm(id):
     if session["role"] != "LEVEL4":
         return "Access Denied"
     
-    db.session.execute(
-        db.text("""
-            UPDATE monthly_data
-            SET status='FORWARDED_TO_DRM'
-            WHERE id=:id
-        """),
-        {"id": id}
-    )
-    db.session.commit()
+    try:
+        db.session.execute(
+            db.text("""
+                UPDATE monthly_data
+                SET status='FORWARDED_TO_DRM'
+                WHERE id=:id AND status='FORWARDED_TO_ADRM'
+            """),
+            {"id": id}
+        )
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+    
     return redirect("/adrm")
 
 @app.route("/forward_to_adrm/<int:id>")
@@ -816,15 +745,20 @@ def forward_to_adrm(id):
     if session["role"] != "LEVEL3":
         return "Access Denied"
     
-    db.session.execute(
-        db.text("""
-            UPDATE monthly_data
-            SET status='FORWARDED_TO_ADRM'
-            WHERE id=:id
-        """),
-        {"id": id}
-    )
-    db.session.commit()
+    try:
+        db.session.execute(
+            db.text("""
+                UPDATE monthly_data
+                SET status='FORWARDED_TO_ADRM'
+                WHERE id=:id AND status='APPROVED'
+            """),
+            {"id": id}
+        )
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
+    
     return redirect("/nodal")
 
 @app.route("/admin/kpis")
@@ -854,19 +788,23 @@ def update_kpi(id):
 
     annual_target = request.form["annual_target"]
 
-    db.session.execute(
-        db.text("""
-            UPDATE kpis
-            SET annual_target = :annual_target
-            WHERE id = :id
-        """),
-        {
-            "annual_target": annual_target,
-            "id": id
-        }
-    )
+    try:
+        db.session.execute(
+            db.text("""
+                UPDATE kpis
+                SET annual_target = :annual_target
+                WHERE id = :id
+            """),
+            {
+                "annual_target": annual_target,
+                "id": id
+            }
+        )
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}", 500
 
-    db.session.commit()
     return redirect("/admin/kpis")
 
 @app.route("/logout")

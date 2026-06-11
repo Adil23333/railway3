@@ -3,7 +3,7 @@
 <head>
  <meta charset="UTF-8"/>
  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
- <title>HOD Review – DPMS</title>
+ <title>HOD Review – DPMS | Palakkad Division</title>
  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:wght@700&display=swap" rel="stylesheet"/>
@@ -26,7 +26,6 @@
  flex-direction: column;
  }
  
- /* ── NAVBAR with logo styling ── */
  .top-navbar {
  background: var(--rly-blue);
  border-bottom: 3px solid var(--rly-gold);
@@ -40,7 +39,6 @@
  z-index: 1000;
  }
  
- /* Logo image styling */
  .logo-img {
  height: 42px;
  width: auto;
@@ -65,7 +63,6 @@
  .app-name { font-size: .78rem; font-weight: 600; color: #c8d8f0; letter-spacing: .04em; text-transform: uppercase; }
  .app-sub { font-size: .65rem; color: rgba(255,255,255,.5); }
  
- /* Right side user + logout */
  .nav-controls {
  margin-left: auto;
  display: flex;
@@ -113,7 +110,6 @@
  gap: 7px;
  text-decoration: none;
  transition: all 0.2s ease;
- letter-spacing: 0.3px;
  }
  .logout-nav-btn i {
  font-size: 0.8rem;
@@ -125,14 +121,9 @@
  color: white;
  transform: translateY(-1px);
  }
- .logout-nav-btn:active {
- transform: translateY(1px);
- }
  
- /* ── PAGE WRAPPER ── */
  .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; }
  
- /* ── BREADCRUMB ── */
  .breadcrumb-bar {
  background: #fff;
  border: 1px solid var(--border);
@@ -143,10 +134,7 @@
  .breadcrumb { margin: 0; font-size: .78rem; }
  .breadcrumb-item a { color: var(--rly-light); text-decoration: none; }
  .breadcrumb-item a:hover { text-decoration: underline; }
- .breadcrumb-item.active { color: #5c6b7a; }
- .breadcrumb-item+.breadcrumb-item::before { color: #5c6b7a; }
  
- /* ── PAGE HEADING ── */
  .page-heading h4 {
  font-family: 'Noto Serif', serif;
  font-size: 1.15rem; font-weight: 700;
@@ -154,7 +142,6 @@
  }
  .page-heading p { font-size: .78rem; color: #5c6b7a; margin: .2rem 0 0; }
  
- /* ── TABLE CARD ── */
  .table-card {
  background: #fff;
  border: 1px solid var(--border);
@@ -167,19 +154,18 @@
  padding: .75rem 1.1rem;
  display: flex;
  align-items: center;
- gap: .75rem;
+ justify-content: space-between;
  }
  .table-card-header h6 {
  color: #fff; font-weight: 600; font-size: .88rem;
  margin: 0; letter-spacing: .02em;
  }
  
- /* ── TABLE ── */
- .kpi-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+ .kpi-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
  .kpi-table thead th {
  background: #f0f4f9;
  color: var(--rly-blue);
- font-weight: 700; font-size: .72rem;
+ font-weight: 700; font-size: .7rem;
  text-transform: uppercase; letter-spacing: .07em;
  padding: .7rem .9rem;
  border-bottom: 2px solid var(--border);
@@ -198,57 +184,30 @@
  border-top: 1px solid var(--border);
  }
  
- /* ── STATUS BADGES ── */
  .badge-status {
  font-size: .7rem; font-weight: 700;
  padding: .3rem .65rem; border-radius: 12px;
- letter-spacing: .04em; text-transform: uppercase;
- display: inline-flex; align-items: center; gap: .35rem;
+ letter-spacing: .04em;
+ display: inline-flex;
+ align-items: center;
+ gap: .35rem;
  white-space: nowrap;
  }
  .badge-submitted { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
  .badge-approved { background: #d1e7dd; color: #0a5c36; border: 1px solid #198754; }
- .badge-returned { background: #f8d7da; color: #842029; border: 1px solid #dc3545; }
- .badge-forwarded { background: #cfe2ff; color: #0a3e7a; border: 1px solid #0d6efd; }
- .badge-frozen { background: #e2e3e5; color: #41464b; border: 1px solid #6c757d; }
- .badge-default { background: #e8eef8; color: var(--rly-blue); border: 1px solid var(--border); }
- 
- /* ── ACTION BUTTONS ── */
- .btn-approve {
- background: #198754; color: #fff;
- border: none;
- border-radius: 5px;
- padding: .3rem .75rem;
- font-size: .75rem;
- font-weight: 600;
- display: inline-flex;
- align-items: center;
- gap: .35rem;
- text-decoration: none;
- transition: background .15s, transform .1s;
- white-space: nowrap;
- cursor: pointer;
- }
- .btn-approve:hover { background: #157347; color: #fff; transform: translateY(-1px); }
- .btn-approve:disabled {
- background: #6c757d;
- cursor: not-allowed;
- opacity: 0.7;
- }
  
  .btn-return {
  background: #dc3545; color: #fff;
  border: none;
  border-radius: 5px;
- padding: .3rem .75rem;
- font-size: .75rem;
+ padding: .3rem .9rem;
+ font-size: .73rem;
  font-weight: 600;
  display: inline-flex;
  align-items: center;
  gap: .35rem;
  text-decoration: none;
- transition: background .15s, transform .1s;
- white-space: nowrap;
+ transition: all .15s;
  cursor: pointer;
  }
  .btn-return:hover { background: #bb2d3b; color: #fff; transform: translateY(-1px); }
@@ -258,27 +217,53 @@
  opacity: 0.7;
  }
  
- /* Submission date styling */
+ .btn-approve-bulk {
+ background: #198754; color: #fff;
+ border: none;
+ border-radius: 5px;
+ padding: .3rem 1rem;
+ font-size: .75rem;
+ font-weight: 600;
+ display: inline-flex;
+ align-items: center;
+ gap: .35rem;
+ transition: all .15s;
+ cursor: pointer;
+ }
+ .btn-approve-bulk:hover { background: #157347; transform: translateY(-1px); }
+ 
  .submission-date {
- font-size: .72rem;
+ font-size: .7rem;
  font-weight: 500;
  color: #2c6b2f;
  background: #ebf5eb;
- padding: .2rem .55rem;
+ padding: .2rem .6rem;
  border-radius: 16px;
  display: inline-flex;
  align-items: center;
  gap: .3rem;
  white-space: nowrap;
- font-family: monospace;
- letter-spacing: 0.2px;
- }
- .submission-date i {
- font-size: .65rem;
- color: #2c6b2f;
  }
  
- /* Filter section styling */
+ .perf-value {
+ font-weight: 600;
+ font-size: .85rem;
+ background: #e8f0fe;
+ padding: .3rem .7rem;
+ border-radius: 8px;
+ display: inline-block;
+ }
+ 
+ .info-badge {
+ background: #eef2fa;
+ color: #2c5282;
+ padding: .3rem .7rem;
+ border-radius: 8px;
+ display: inline-block;
+ font-weight: 500;
+ font-size: .78rem;
+ }
+ 
  .filter-section {
  background: #fff;
  border: 1px solid var(--border);
@@ -291,12 +276,6 @@
  font-size: 0.8rem;
  color: var(--rly-blue);
  margin-bottom: 0.5rem;
- }
- .filter-select {
- border: 1px solid var(--border);
- border-radius: 6px;
- padding: 0.4rem 0.75rem;
- font-size: 0.85rem;
  }
  .btn-filter {
  background: var(--rly-blue);
@@ -316,7 +295,6 @@
  transform: translateY(-1px);
  }
  
- /* ── FOOTER ── */
  .site-footer {
  background: var(--rly-blue);
  border-top: 2px solid var(--rly-gold);
@@ -327,64 +305,31 @@
  .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
  .site-footer .gov { font-size: .65rem; color: var(--rly-gold); font-weight: 600; }
  
- /* ── SN CELL ── */
- .sn-cell { color: #5c6b7a; font-size: .75rem; }
- 
- /* ── PERF VALUE ── */
- .perf-val { font-weight: 600; }
- 
- /* responsiveness */
  @media (max-width: 780px) {
- .top-navbar {
- flex-wrap: wrap;
- padding: 0.6rem 1rem;
- gap: 0.6rem;
- }
- .nav-controls {
- margin-left: 0;
- width: 100%;
- justify-content: space-between;
- margin-top: 4px;
- }
- .user-badge {
- padding: 0.2rem 0.7rem;
- }
- .kpi-table thead th, .kpi-table tbody td {
- padding: .5rem .6rem;
- }
- .submission-date {
- font-size: .65rem;
- white-space: normal;
- word-break: keep-all;
- }
+ .top-navbar { flex-wrap: wrap; padding: 0.6rem 1rem; }
+ .nav-controls { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 4px; }
+ .kpi-table thead th, .kpi-table tbody td { padding: .5rem .6rem; }
  }
  </style>
 </head>
 <body>
  
-<!-- ══ NAVBAR with LOGOUT BUTTON and Railway Logo (HOD Dashboard) ═════════════════ -->
 <nav class="top-navbar">
- <!-- Railway Logo Image -->
  <div class="emblem">
   <img src="{{ url_for('static', filename='images/images.png') }}" 
        alt="Southern Railway Emblem" 
        class="logo-img"
-       onerror="this.style.display='none'; this.parentElement.innerHTML='<svg class=\'ir-logo\' viewBox=\'0 0 44 44\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'><circle cx=\'22\' cy=\'22\' r=\'20\' stroke=\'#d4a017\' stroke-width=\'2.5\' fill=\'none\'/><g stroke=\'#d4a017\' stroke-width=\'1.6\'><line x1=\'22\' y1=\'4\' x2=\'22\' y2=\'40\'/><line x1=\'4\' y1=\'22\' x2=\'40\' y2=\'22\'/><line x1=\'8.7\' y1=\'8.7\' x2=\'35.3\' y2=\'35.3\'/><line x1=\'35.3\' y1=\'8.7\' x2=\'8.7\' y2=\'35.3\'/></g><circle cx=\'22\' cy=\'22\' r=\'5\' fill=\'#d4a017\'/><circle cx=\'22\' cy=\'22\' r=\'2\' fill=\'#003366\'/></svg>'">
+       onerror="this.style.display='none'">
  </div>
- 
  <div>
   <div class="brand-title">Indian Railways</div>
   <div class="brand-sub">भारतीय रेल</div>
  </div>
- 
  <div class="nav-divider"></div>
- 
  <div>
   <div class="app-name">Division Performance Monitoring System</div>
   <div class="app-sub">Palakkad Division &nbsp;|&nbsp; Southern Railway</div>
  </div>
- 
- <!-- Right side: HOD info + logout button -->
  <div class="nav-controls">
   <div class="user-badge">
    <i class="fas fa-user-tie"></i>
@@ -395,53 +340,47 @@
   </a>
  </div>
 </nav>
- 
-<!-- ══ PAGE WRAPPER ════════════════════════════════════════ -->
+
 <div class="page-wrapper">
- 
- <!-- Breadcrumb -->
  <div class="breadcrumb-bar">
   <nav aria-label="breadcrumb">
    <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="/"><i class="fas fa-home me-1"></i>Home</a></li>
-    <li class="breadcrumb-item"><a href="#">HOD Dashboard</a></li>
-    <li class="breadcrumb-item active">KPI Review</li>
+    <li class="breadcrumb-item active">HOD Dashboard / KPI Review</li>
    </ol>
   </nav>
  </div>
  
- <!-- Page heading -->
  <div class="page-heading d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
   <div>
-   <h4><i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>Submitted KPIs</h4>
-   <p>Review and action KPI submissions from departments — includes submission timestamp from monthly_data.created_at</p>
+   <h4><i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>Submitted KPIs – Pending Review</h4>
+   <p>Review department submissions, compare with previous year data, and approve or return for revisions</p>
   </div>
  </div>
 
- <!-- Filter Section -->
  <div class="filter-section">
   <form method="GET" action="/hod" id="filterForm">
    <div class="row align-items-end">
-    <div class="col-md-4">
-     <label class="filter-label">Month</label>
-     <select name="month" class="form-select filter-select">
-      <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
-      <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
-      <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
-      <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>APRIL</option>
-      <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>MAY</option>
-      <option value="JUNE" {% if selected_month == 'JUNE' %}selected{% endif %}>JUNE</option>
-      <option value="JULY" {% if selected_month == 'JULY' %}selected{% endif %}>JULY</option>
-      <option value="AUGUST" {% if selected_month == 'AUGUST' %}selected{% endif %}>AUGUST</option>
-      <option value="SEPTEMBER" {% if selected_month == 'SEPTEMBER' %}selected{% endif %}>SEPTEMBER</option>
-      <option value="OCTOBER" {% if selected_month == 'OCTOBER' %}selected{% endif %}>OCTOBER</option>
-      <option value="NOVEMBER" {% if selected_month == 'NOVEMBER' %}selected{% endif %}>NOVEMBER</option>
-      <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>
+    <div class="col-md-3">
+     <label class="filter-label"><i class="fas fa-calendar-alt me-1"></i>Month</label>
+     <select name="month" class="form-select">
+      <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>January</option>
+      <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>February</option>
+      <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>March</option>
+      <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>April</option>
+      <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>May</option>
+      <option value="JUNE" {% if selected_month == 'JUNE' %}selected{% endif %}>June</option>
+      <option value="JULY" {% if selected_month == 'JULY' %}selected{% endif %}>July</option>
+      <option value="AUGUST" {% if selected_month == 'AUGUST' %}selected{% endif %}>August</option>
+      <option value="SEPTEMBER" {% if selected_month == 'SEPTEMBER' %}selected{% endif %}>September</option>
+      <option value="OCTOBER" {% if selected_month == 'OCTOBER' %}selected{% endif %}>October</option>
+      <option value="NOVEMBER" {% if selected_month == 'NOVEMBER' %}selected{% endif %}>November</option>
+      <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>December</option>
      </select>
     </div>
-    <div class="col-md-3">
-     <label class="filter-label">Year</label>
-     <select name="year" class="form-select filter-select">
+    <div class="col-md-2">
+     <label class="filter-label"><i class="fas fa-calendar-week me-1"></i>Year</label>
+     <select name="year" class="form-select">
       {% for y in range(2024, 2031) %}
        <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
       {% endfor %}
@@ -449,264 +388,220 @@
     </div>
     <div class="col-md-2">
      <button type="submit" class="btn-filter w-100">
-      <i class="fas fa-filter"></i> Filter
+      <i class="fas fa-filter"></i> Apply Filter
      </button>
     </div>
-    <div class="col-md-3">
-     <div class="text-end">
-      <span class="badge-status badge-default">
-       <i class="fas fa-calendar-alt"></i> 
-       Showing: {{ selected_month }} {{ selected_year }}
-      </span>
-     </div>
+    <div class="col-md-5 text-end">
+     <span class="badge-status badge-submitted">
+      <i class="fas fa-calendar-check"></i> Reviewing: {{ selected_month }} {{ selected_year }}
+     </span>
     </div>
    </div>
   </form>
  </div>
  
- <!-- Table card -->
  <div class="table-card">
-  <div class="table-card-header d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center gap-2">
-        <i class="fas fa-table" style="color:var(--rly-gold);"></i>
-        <h6 class="mb-0">
-            KPI Records – Pending HOD Review
-            <span style="font-size:0.7rem;font-weight:normal;margin-left:0.5rem;">
-                <i class="fas fa-calendar-alt"></i>
-                Submission date shown (created_at)
-            </span>
-        </h6>
+  <div class="table-card-header">
+    <div>
+        <i class="fas fa-table me-2" style="color:var(--rly-gold);"></i>
+        <h6 class="d-inline-block mb-0">KPI Performance Records</h6>
     </div>
-    <button id="approveSelectedBtn" class="btn-approve">
-        <i class="fas fa-check-circle"></i>
-        Approve Selected
+    <button id="approveSelectedBtn" class="btn-approve-bulk">
+        <i class="fas fa-check-double"></i> Approve Selected
     </button>
   </div>
  
   <div class="table-responsive">
-   <table class="kpi-table">
+   <table class="kpi-table table table-hover">
     <thead>
      <tr>
-       <th><input type="checkbox" id="selectAll"></th>
-       <th>S.N</th>
-       <th><i class="fas fa-chart-bar me-1"></i>KPI</th>
-       <th><i class="fas fa-calendar-day me-1"></i>Monthly</th>
-       <th><i class="fas fa-layer-group me-1"></i>Cumulative</th>
-       <th><i class="fas fa-clock me-1"></i>Submitted On</th>
-       <th><i class="fas fa-info-circle me-1"></i>Status</th>
-       <th><i class="fas fa-cog me-1"></i>Actions</th>
+       <th width="5%"><input type="checkbox" id="selectAll"></th>
+       <th width="5%">#</th>
+       <th width="20%">KPI Name</th>
+       <th width="10%">Monthly Value</th>
+       <th width="12%">Previous Year (Full)</th>
+       <th width="12%">Cumulative (YTD)</th>
+       <th width="12%">Prev Year Cumulative</th>
+       <th width="10%">Submitted On</th>
+       <th width="8%">Status</th>
+       <th width="8%">Action</th>
       </tr>
     </thead>
     <tbody>
      {% for row in rows %}
-     <tr data-id="{{ row.id }}" data-status="{{ row.status }}">
+     <tr>
        <td class="text-center">
         {% if row.status == 'SUBMITTED' %}
          <input type="checkbox" class="kpi-checkbox" value="{{ row.id }}">
         {% endif %}
-       </td>
+        </td>
        <td class="sn-cell">{{ loop.index }}</td>
-       <td><span style="font-weight:600;">{{ row.kpi_name }}</span></td>
-       <td><span class="perf-val">{{ row.performance_month }}</span></td>
-       <td><span class="perf-val">{{ row.cumulative_performance }}</span></td>
-       
-       <!-- Submission Date Column - Fixed datetime handling -->
-       <td class="submission-date-cell">
-        {% if row.created_at %}
-          {% if row.created_at is string %}
-            {# If it's already a string #}
-            {% set date_part = row.created_at.split(' ')[0] if ' ' in row.created_at else row.created_at %}
-            {% set time_part = row.created_at.split(' ')[1] if ' ' in row.created_at else '' %}
-            <span class="submission-date">
-              <i class="far fa-calendar-alt"></i> {{ date_part }}
-              {% if time_part %}
-                <i class="far fa-clock ms-1"></i> {{ time_part[:5] }}
-              {% endif %}
-            </span>
-          {% else %}
-            {# If it's a datetime object #}
-            <span class="submission-date">
-              <i class="far fa-calendar-alt"></i> {{ row.created_at.strftime('%Y-%m-%d') }}
-              <i class="far fa-clock ms-1"></i> {{ row.created_at.strftime('%H:%M') }}
-            </span>
-          {% endif %}
-        {% else %}
-          <span class="submission-date" style="background:#f0f2f5; color:#6c757d;">
-            <i class="far fa-calendar-times"></i> Not recorded
-          </span>
+       <td>
+        <strong>{{ row.kpi_name }}</strong>
+        {% if row.unit %}
+         <br><small class="text-muted">({{ row.unit }})</small>
         {% endif %}
-        </td>
-       
-       <td class="status-cell">
-       {% if row.status == 'SUBMITTED' %}
-        <span class="badge-status badge-submitted"><i class="fas fa-clock"></i>{{ row.status }}</span>
-       {% elif row.status == 'APPROVED' %}
-        <span class="badge-status badge-approved"><i class="fas fa-check-circle"></i>{{ row.status }}</span>
-       {% elif row.status == 'RETURNED' %}
-        <span class="badge-status badge-returned"><i class="fas fa-undo"></i>{{ row.status }}</span>
-       {% elif row.status == 'FORWARDED_TO_ADRM' %}
-        <span class="badge-status badge-forwarded"><i class="fas fa-share"></i>FORWARDED</span>
-       {% elif row.status == 'FORWARDED_TO_DRM' %}
-        <span class="badge-status badge-forwarded"><i class="fas fa-share"></i>FORWARDED TO DRM</span>
-       {% elif row.status == 'FROZEN' %}
-        <span class="badge-status badge-frozen"><i class="fas fa-lock"></i>{{ row.status }}</span>
-       {% else %}
-        <span class="badge-status badge-default">{{ row.status }}</span>
-       {% endif %}
-        </td>
-       
-       <td class="action-cell">
-        <div class="d-flex gap-2">
-         {% if row.status == 'SUBMITTED' %}
-          <a href="/approve/{{ row.id }}" class="btn-approve" data-kpiname="{{ row.kpi_name }}">
-           <i class="fas fa-check"></i> Approve
-          </a>
-          <a href="/return/{{ row.id }}" class="btn-return" data-kpiname="{{ row.kpi_name }}">
-           <i class="fas fa-undo"></i> Return
-          </a>
-         {% else %}
-          <button class="btn-approve" disabled style="opacity:0.5; cursor:not-allowed;">
-           <i class="fas fa-check"></i> Approve
-          </button>
-          <button class="btn-return" disabled style="opacity:0.5; cursor:not-allowed;">
-           <i class="fas fa-undo"></i> Return
-          </button>
-         {% endif %}
-        </div>
-        </td>
-       </tr>
+       </td>
+       <td>
+        <span class="perf-value">
+         {{ row.performance_month if row.performance_month is not none else '-' }}
+        </span>
+       </td>
+       <td>
+        <span class="info-badge">
+         <i class="fas fa-database"></i> 
+         {{ row.previous_year_value if row.previous_year_value is not none else 'Not Available' }}
+        </span>
+       </td>
+       <td>
+        <span class="perf-value" style="background:#d4edda;">
+         <i class="fas fa-chart-line"></i> 
+         {{ row.cumulative_performance if row.cumulative_performance is not none else '-' }}
+        </span>
+       </td>
+       <td>
+        <span class="info-badge">
+         <i class="fas fa-chart-simple"></i> 
+         {{ row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year is not none else 'Not Available' }}
+        </span>
+       </td>
+       <td>
+        {% if row.created_at %}
+         <span class="submission-date">
+          <i class="far fa-calendar-alt"></i> 
+          {% if row.created_at is string %}
+            {{ row.created_at[:10] }}
+          {% else %}
+            {{ row.created_at.strftime('%Y-%m-%d') }}
+          {% endif %}
+         </span>
+        {% else %}
+         <span class="text-muted">-</span>
+        {% endif %}
+       </td>
+       <td>
+        <span class="badge-status badge-submitted">
+         <i class="fas fa-clock"></i> {{ row.status }}
+        </span>
+       </td>
+       <td>
+        {% if row.status == 'SUBMITTED' %}
+         <a href="/return/{{ row.id }}" class="btn-return btn-sm">
+          <i class="fas fa-undo-alt"></i> Return
+         </a>
+        {% else %}
+         <button class="btn-return btn-sm" disabled style="opacity:0.5;">
+          <i class="fas fa-ban"></i> Return
+         </button>
+        {% endif %}
+       </td>
+     </tr>
      {% else %}
-      <tr>
-       <td colspan="8" style="text-align:center; padding: 2rem 1rem; color:#5c6b7a;">
-        <i class="fas fa-inbox fa-2x mb-2 d-block" style="color:#cdd8e3;"></i>
-        No KPI submissions found for {{ selected_month }} {{ selected_year }}.
-        <br>
-        <small>All records for this period are up to date or no data submitted.</small>
-        </td>
-       </tr>
+     <tr>
+       <td colspan="10" class="text-center py-5">
+        <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
+        <h6 class="text-muted">No KPI submissions found</h6>
+        <small class="text-muted">No records with 'SUBMITTED' status for {{ selected_month }} {{ selected_year }}</small>
+       </td>
+     </tr>
      {% endfor %}
     </tbody>
     <tfoot>
-     <tr>
-      <td colspan="8">
-       <i class="fas fa-info-circle me-1"></i>
-       Palakkad Division &nbsp;|&nbsp; Southern Railway &nbsp;|&nbsp; Government of India &nbsp;|&nbsp; 
-       <i class="far fa-calendar-check"></i> Submission date derived from <strong>monthly_data.created_at</strong>
-       <br>
-       <small class="text-muted">Showing data for <strong>{{ selected_month }} {{ selected_year }}</strong></small>
+      <tr>
+       <td colspan="10" class="text-muted">
+        <i class="fas fa-info-circle me-1"></i>
+        <strong>Note:</strong> Previous Year (Full) = Previous year's total/annual value | 
+        Cumulative (YTD) = Year-to-date performance up to selected month |
+        Prev Year Cumulative = Previous year's cumulative up to same month
        </td>
       </tr>
     </tfoot>
    </table>
   </div>
  </div>
- 
-</div><!-- /page-wrapper -->
- 
-<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+</div>
+
 <footer class="site-footer">
- <p><i class="fas fa-train me-1"></i><strong style="color:#fff;">Palakkad Division</strong> &nbsp;|&nbsp; Southern Railway &nbsp;|&nbsp; Government of India</p>
+ <p><i class="fas fa-train me-1"></i>Palakkad Division | Southern Railway | Government of India</p>
  <p class="gov"><i class="fas fa-shield-alt me-1"></i>Official Government Portal</p>
 </footer>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
- (function() {
-   // Logout confirmation for HOD dashboard
-   const logoutButton = document.getElementById('hodLogoutBtn');
-   if (logoutButton) {
-     logoutButton.addEventListener('click', function(event) {
-       const confirmLogout = confirm('Are you sure you want to logout from HOD Dashboard? Any pending reviews will not be saved.');
-       if (!confirmLogout) {
-         event.preventDefault();
-         return false;
-       }
-       return true;
-     });
-   }
-
-   // Confirmations for Approve actions
-   const approveBtns = document.querySelectorAll('.btn-approve:not([disabled])');
-   approveBtns.forEach(btn => {
-     btn.removeEventListener('click', window._approveHandler);
-     function approveHandler(e) {
-       const kpiName = this.getAttribute('data-kpiname') || 
-                      (this.closest('tr')?.querySelector('td:nth-child(3) span')?.innerText || 'this KPI');
-       const confirmApprove = confirm(`Approve "${kpiName}"?\n\nOnce approved, it will be forwarded to Nodal Officer.`);
-       if (!confirmApprove) {
+(function() {
+   // Logout confirmation
+   const logoutBtn = document.getElementById('hodLogoutBtn');
+   if (logoutBtn) {
+     logoutBtn.addEventListener('click', function(e) {
+       if (!confirm('Are you sure you want to logout?')) {
          e.preventDefault();
        }
-     }
-     btn.addEventListener('click', approveHandler);
-     window._approveHandler = approveHandler;
-   });
+     });
+   }
    
-   // Select All Checkboxes
-   document.getElementById("selectAll")?.addEventListener("change", function() {
-    document.querySelectorAll(".kpi-checkbox").forEach(cb => {
-        cb.checked = this.checked;
-    });
-   });
-
-   // Bulk Approve
-   document.getElementById("approveSelectedBtn")?.addEventListener("click", function() {
-    const ids = [];
-    document.querySelectorAll(".kpi-checkbox:checked").forEach(cb => {
-        ids.push(cb.value);
-    });
-
-    if(ids.length === 0){
-        alert("Select at least one KPI");
-        return;
-    }
-
-    if(!confirm(`Approve ${ids.length} KPI(s)?`)){
-        return;
-    }
-
-    fetch("/approve_bulk", {
-        method: "POST",
-        headers: {
-            "Content-Type":"application/json"
-        },
-        body: JSON.stringify({ ids: ids })
-    })
-    .then(response => response.json())
-    .then(data => {
-        alert(data.message);
-        location.reload();
-    })
-    .catch(error => {
-        console.error(error);
-        alert("Approval failed");
-    });
-   });
-
-   // Confirmations for Return actions
+   // Select All functionality
+   const selectAllCheckbox = document.getElementById("selectAll");
+   if (selectAllCheckbox) {
+     selectAllCheckbox.addEventListener("change", function() {
+       document.querySelectorAll(".kpi-checkbox").forEach(cb => {
+         cb.checked = this.checked;
+       });
+     });
+   }
+   
+   // Return button confirmation
    const returnBtns = document.querySelectorAll('.btn-return:not([disabled])');
    returnBtns.forEach(btn => {
-     btn.removeEventListener('click', window._returnHandler);
-     function returnHandler(e) {
-       const kpiName = this.getAttribute('data-kpiname') || 
-                      (this.closest('tr')?.querySelector('td:nth-child(3) span')?.innerText || 'this KPI');
-       let remarks = prompt(`Return "${kpiName}" to department for revision.\n\nPlease provide remarks (optional):`, 'Needs revision/clarification');
+     btn.addEventListener('click', function(e) {
+       const kpiName = this.closest('tr')?.querySelector('td:nth-child(3) strong')?.innerText || 'this KPI';
+       const remarks = prompt(`Return "${kpiName}" to department for revision.\n\nPlease provide remarks/reason for return:`, 'Needs revision or clarification');
        
        if (remarks === null) {
          e.preventDefault();
-       } else if (remarks !== null && remarks.trim() !== '') {
-         const originalHref = this.getAttribute('href');
-         const encodedRemarks = encodeURIComponent(remarks.trim());
-         const separator = originalHref.includes('?') ? '&' : '?';
-         this.setAttribute('href', originalHref + separator + 'remarks=' + encodedRemarks);
+         return false;
        }
-     }
-
-     btn.addEventListener('click', returnHandler);
-     window._returnHandler = returnHandler;
+       
+       const originalHref = this.getAttribute('href');
+       const encodedRemarks = encodeURIComponent(remarks.trim());
+       const separator = originalHref.includes('?') ? '&' : '?';
+       this.setAttribute('href', originalHref + separator + 'remarks=' + encodedRemarks);
+       return true;
+     });
    });
    
-   console.log('HOD Review Dashboard — Filter by Month/Year enabled');
- })();
+   // Bulk approve
+   const bulkApproveBtn = document.getElementById("approveSelectedBtn");
+   if (bulkApproveBtn) {
+     bulkApproveBtn.addEventListener("click", function() {
+       const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
+       const ids = Array.from(checkedBoxes).map(cb => cb.value);
+       
+       if (ids.length === 0) {
+         alert("Please select at least one KPI to approve.");
+         return;
+       }
+       
+       if (!confirm(`Approve ${ids.length} selected KPI(s)?\n\nApproved records will be forwarded to the Nodal Officer.`)) {
+         return;
+       }
+       
+       fetch("/approve_bulk", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ ids: ids })
+       })
+       .then(response => response.json())
+       .then(data => {
+         alert(data.message || "Bulk approval completed successfully.");
+         location.reload();
+       })
+       .catch(error => {
+         console.error("Error:", error);
+         alert("Error in bulk approval. Please try again.");
+       });
+     });
+   }
+})();
 </script>
 </body>
 </html>

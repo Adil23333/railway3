@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return KPI - Add Remarks</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --rly-blue: #003366;
+            --rly-gold: #d4a017;
+        }
+        body {
+            background: #eef2f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-header {
+            background: var(--rly-blue);
+            color: white;
+        }
+        .btn-submit {
+            background: var(--rly-blue);
+            color: white;
+        }
+        .btn-submit:hover {
+            background: #004080;
+        }
+        .kpi-info {
+            background: #f8f9fa;
+            border-left: 4px solid var(--rly-gold);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-undo-alt me-2"></i>
+                            Return KPI for Revision
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info kpi-info">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <strong><i class="fas fa-chart-line me-1"></i> KPI:</strong> {{ kpi.kpi_name }}
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <strong><i class="fas fa-calendar-alt me-1"></i> Monthly Performance:</strong> {{ kpi.performance_month if kpi.performance_month else 'Not entered' }}
+                                </div>
+                                <div class="col-md-6 mt-2">
+                                    <strong><i class="fas fa-chart-bar me-1"></i> Cumulative Performance:</strong> {{ kpi.cumulative_performance if kpi.cumulative_performance else 'Not entered' }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="remarks" class="form-label">
+                                    <i class="fas fa-comment-dots me-1"></i>
+                                    Remarks / Reason for Return <span class="text-danger">*</span>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="remarks" 
+                                    name="remarks" 
+                                    rows="5" 
+                                    placeholder="Please provide detailed reason for returning this KPI. Include specific feedback and required corrections..."
+                                    required
+                                ></textarea>
+                                <div class="form-text text-muted mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    These remarks will be visible to the department user when they view this KPI.
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="/hod" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-submit">
+                                    <i class="fas fa-paper-plane me-1"></i> Submit Return
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

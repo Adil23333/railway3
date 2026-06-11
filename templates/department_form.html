@@ -27,11 +27,7 @@
  display: flex;
  flex-direction: column;
  }
- .kpi-table tbody tr {
-    border: 1px solid #d6dee8;
-}
  
- /* ── NAVBAR ── */
  .top-navbar {
  background: var(--rly-blue);
  border-bottom: 3px solid var(--rly-gold);
@@ -44,6 +40,7 @@
  top: 0;
  z-index: 1000;
  }
+ 
  .ir-logo { width: 42px; height: 42px; flex-shrink: 0; }
  .brand-title {
  font-family: 'Noto Serif', serif;
@@ -56,10 +53,8 @@
  .app-name { font-size: .78rem; font-weight: 600; color: #c8d8f0; letter-spacing: .04em; text-transform: uppercase; }
  .app-sub { font-size: .65rem; color: rgba(255,255,255,.5); }
  
- /* ── PAGE WRAPPER ── */
  .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; }
  
- /* ── BREADCRUMB ── */
  .breadcrumb-bar {
  background: #fff;
  border: 1px solid var(--border);
@@ -69,19 +64,13 @@
  }
  .breadcrumb { margin: 0; font-size: .78rem; }
  .breadcrumb-item a { color: var(--rly-light); text-decoration: none; }
- .breadcrumb-item a:hover { text-decoration: underline; }
- .breadcrumb-item.active { color: #5c6b7a; }
- .breadcrumb-item+.breadcrumb-item::before { color: #5c6b7a; }
  
- /* ── PAGE HEADING ── */
  .page-heading h4 {
  font-family: 'Noto Serif', serif;
  font-size: 1.15rem; font-weight: 700;
  color: var(--rly-blue); margin: 0;
  }
- .page-heading p { font-size: .78rem; color: #5c6b7a; margin: .2rem 0 0; }
  
- /* ── RETURNED ITEMS SECTION ── */
  .returned-section {
  background: #fff;
  border: 2px solid var(--return-border);
@@ -96,36 +85,17 @@
  align-items: center;
  gap: 0.75rem;
  }
- .returned-header i {
- font-size: 1.5rem;
- color: #856404;
- }
- .returned-header h5 {
- margin: 0;
- color: #856404;
- font-weight: 700;
- }
- .returned-header p {
- margin: 0;
- color: #856404;
- font-size: 0.8rem;
- }
+ .returned-header i { font-size: 1.5rem; color: #856404; }
+ .returned-header h5 { margin: 0; color: #856404; font-weight: 700; }
+ .returned-header p { margin: 0; color: #856404; font-size: 0.8rem; }
+ 
  .returned-item {
  border-bottom: 1px solid #f0f0f0;
  padding: 1rem 1.5rem;
  transition: background 0.2s;
  }
- .returned-item:hover {
- background: #fffbf0;
- }
- .returned-item:last-child {
- border-bottom: none;
- }
- .returned-kpi-name {
- font-weight: 700;
- color: var(--rly-blue);
- font-size: 1rem;
- }
+ .returned-item:hover { background: #fffbf0; }
+ .returned-kpi-name { font-weight: 700; color: var(--rly-blue); font-size: 1rem; }
  .returned-remarks {
  background: #f8f9fa;
  border-left: 4px solid var(--return-border);
@@ -133,15 +103,8 @@
  margin-top: 0.5rem;
  border-radius: 4px;
  }
- .returned-remarks i {
- color: var(--return-border);
- margin-right: 0.5rem;
- }
- .returned-remarks-text {
- color: #856404;
- font-style: italic;
- margin-bottom: 0;
- }
+ .returned-remarks-text { color: #856404; font-style: italic; margin-bottom: 0; }
+ 
  .badge-returned {
  background: #fff3cd;
  color: #856404;
@@ -153,6 +116,7 @@
  align-items: center;
  gap: 0.3rem;
  }
+ 
  .btn-resubmit {
  background: var(--rly-blue);
  color: white;
@@ -161,17 +125,13 @@
  padding: 0.4rem 1rem;
  font-size: 0.8rem;
  font-weight: 600;
- transition: all 0.2s;
- text-decoration: none;
+ cursor: pointer;
  display: inline-flex;
  align-items: center;
  gap: 0.5rem;
  }
- .btn-resubmit:hover {
- background: var(--rly-mid);
- transform: translateY(-1px);
- color: white;
- }
+ .btn-resubmit:hover { background: var(--rly-mid); transform: translateY(-1px); }
+ 
  .btn-remove-return {
  background: #dc3545;
  color: white;
@@ -180,20 +140,14 @@
  padding: 0.4rem 1rem;
  font-size: 0.8rem;
  font-weight: 600;
- transition: all 0.2s;
- text-decoration: none;
+ cursor: pointer;
  display: inline-flex;
  align-items: center;
  gap: 0.5rem;
- cursor: pointer;
  }
- .btn-remove-return:hover {
- background: #bb2d3b;
- transform: translateY(-1px);
- color: white;
- }
+ .btn-remove-return:hover { background: #bb2d3b; transform: translateY(-1px); }
+ .btn-remove-return:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.6; }
  
- /* ── TABLE CARD ── */
  .table-card {
  background: #fff;
  border: 1px solid var(--border);
@@ -208,87 +162,43 @@
  align-items: center;
  gap: .75rem;
  }
- .table-card-header h6 {
- color: #fff; font-weight: 600; font-size: .88rem;
- margin: 0; letter-spacing: .02em;
- }
+ .table-card-header h6 { color: #fff; font-weight: 600; font-size: .88rem; margin: 0; }
  
- /* ── TABLE ── */
  .kpi-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
  .kpi-table thead th {
  background: #f0f4f9;
  color: var(--rly-blue);
  font-weight: 700; font-size: .72rem;
- text-transform: uppercase; letter-spacing: .07em;
  padding: .7rem .9rem;
- border-bottom: 2px solid var(--border);
- white-space: nowrap;
+ border: 1px solid #d6dee8;
  text-align: center;
  }
- .kpi-table thead th:nth-child(2) { text-align: left; }
- .kpi-table tbody tr {
- border-bottom: 1px solid #edf1f6;
- transition: background .12s;
- }
- .kpi-table tbody tr:hover { background: #f5f8fc; }
  .kpi-table tbody td {
  padding: .65rem .9rem;
- vertical-align: middle;
  text-align: center;
  border: 1px solid #d6dee8;
  }
  .kpi-table tbody td:nth-child(2) { text-align: left; }
- .kpi-table tfoot td {
- background: #f7f9fc;
- font-size: .72rem; color: #5c6b7a;
- padding: .55rem .9rem;
- border-top: 1px solid var(--border);
- }
  
- /* ── STATIC CELLS ── */
- .sn-cell { color: #5c6b7a; font-size: .75rem; font-weight: 600; }
- .section-badge {
- display: inline-block;
- background: #e8eef8; color: var(--rly-blue);
- border: 1px solid var(--border);
- border-radius: 4px;
- font-size: .72rem; font-weight: 600;
- padding: .2rem .55rem;
- white-space: nowrap;
- }
- .kpi-name-cell { font-weight: 600; color: #1a2a3a; text-align: left !important; padding-left: 20px !important; }
- .unit-cell { color: #5c6b7a; font-size: .78rem; }
- .target-cell { font-weight: 700; color: var(--rly-blue); }
- 
- /* ── NUMBER INPUTS ── */
  .kpi-input {
  width: 100%;
  min-width: 90px;
  padding: .35rem .55rem;
  font-size: .82rem;
- font-family: 'Noto Sans', sans-serif;
  font-weight: 600;
- color: #1a2a3a;
  background: #f8fafc;
  border: 1px solid var(--border);
  border-radius: 5px;
  text-align: center;
- transition: border-color .15s, box-shadow .15s, background .15s;
  outline: none;
  }
- .kpi-input:focus {
- border-color: var(--rly-light);
- background: #fff;
- box-shadow: 0 0 0 3px rgba(0,85,165,.12);
- }
- .kpi-input:hover { border-color: #9ab0cc; }
+ .kpi-input:focus { border-color: var(--rly-light); background: #fff; }
+ .kpi-input[readonly] { background: #e9ecef; color: #6c757d; cursor: not-allowed; }
  
- /* ── ACTION BUTTONS ── */
  .btn-area {
  display: flex;
  align-items: center;
  gap: .75rem;
- flex-wrap: wrap;
  padding: 1rem 1.1rem;
  background: #f7f9fc;
  border-top: 1px solid var(--border);
@@ -299,97 +209,64 @@
  border: 2px solid var(--rly-blue);
  border-radius: 6px;
  padding: .45rem 1.2rem;
- font-size: .82rem; font-weight: 700;
- font-family: 'Noto Sans', sans-serif;
- display: inline-flex; align-items: center; gap: .4rem;
+ font-size: .82rem;
+ font-weight: 700;
  cursor: pointer;
- transition: background .15s, color .15s, transform .1s;
  }
- .btn-draft:hover {
- background: var(--rly-blue);
- color: #fff;
- transform: translateY(-1px);
- }
+ .btn-draft:hover { background: var(--rly-blue); color: #fff; }
  .btn-submit {
  background: var(--rly-blue);
  color: #fff;
  border: 2px solid var(--rly-blue);
  border-radius: 6px;
  padding: .45rem 1.2rem;
- font-size: .82rem; font-weight: 700;
- font-family: 'Noto Sans', sans-serif;
- display: inline-flex; align-items: center; gap: .4rem;
+ font-size: .82rem;
+ font-weight: 700;
  cursor: pointer;
- transition: background .15s, transform .1s;
  }
- .btn-submit:hover {
- background: var(--rly-mid);
- transform: translateY(-1px);
- }
- .btn-hint {
- font-size: .72rem; color: #5c6b7a;
- margin-left: auto;
- }
- .kpi-input[readonly]{
-    background:#e9ecef !important;
-    color:#6c757d !important;
-    cursor:not-allowed;
-    border:1px solid #ced4da;
-}
-
-.kpi-input[readonly]:focus{
-    box-shadow:none;
-    border:1px solid #ced4da;
-}
-
-/* Warning row style */
-.table-warning {
-    background-color: #fff3cd !important;
-}
+ .btn-submit:hover { background: var(--rly-mid); }
+ .btn-hint { font-size: .72rem; color: #5c6b7a; margin-left: auto; }
  
- /* ── FOOTER ── */
+ .section-header-row td {
+ background: #fff3b0;
+ color: #c1121f;
+ font-weight: 700;
+ font-size: 18px;
+ text-transform: uppercase;
+ padding: 18px 15px !important;
+ text-align: center !important;
+ }
+ 
  .site-footer {
  background: var(--rly-blue);
  border-top: 2px solid var(--rly-gold);
  padding: .5rem 1.5rem;
- display: flex; align-items: center; justify-content: space-between;
- flex-wrap: wrap; gap: .5rem;
+ display: flex;
+ justify-content: space-between;
  }
- .section-header-row td{
-    background:#fff3b0;
-    color:#c1121f;
-    font-weight:700;
-    font-size:18px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    padding:18px 15px !important;
-    border:1px solid #d4a017 !important;
-    text-align:center !important;
-    width:100%;
- }
- 
  .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
- .site-footer .gov { font-size: .65rem; color: var(--rly-gold); font-weight: 600; }
- .user-info{
-    margin-left:auto;
-    text-align:right;
-    color:white;
+ 
+ .user-info { margin-left: auto; text-align: right; color: white; }
+ .user-info .welcome { font-size: 14px; font-weight: 700; }
+ .user-info .empid { font-size: 12px; color: #d4a017; }
+ 
+ .toast-notification {
+ position: fixed;
+ top: 20px;
+ right: 20px;
+ z-index: 9999;
+ min-width: 300px;
+ animation: slideIn 0.3s ease;
  }
-
- .user-info .welcome{
-    font-size:14px;
-    font-weight:700;
+ @keyframes slideIn {
+ from { transform: translateX(100%); opacity: 0; }
+ to { transform: translateX(0); opacity: 1; }
  }
-
- .user-info .empid{
-    font-size:12px;
-    color:#d4a017;
- }
+ .table-warning { background-color: #fff3cd !important; }
  </style>
 </head>
 <body>
- 
-<!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+
 <nav class="top-navbar">
  <svg class="ir-logo" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
  <circle cx="22" cy="22" r="20" stroke="#d4a017" stroke-width="2.5" fill="none"/>
@@ -409,52 +286,38 @@
  <div class="nav-divider"></div>
  <div>
  <div class="app-name">Division Performance Monitoring System</div>
- <div class="app-sub">Palakkad Division &nbsp;|&nbsp; Southern Railway</div>
+ <div class="app-sub">Palakkad Division | Southern Railway</div>
  </div>
  <div class="user-info">
-    <div class="welcome">
-        Welcome, {{ session.username }}
-    </div>
-    <div class="empid">
-        Employee ID : {{ session.user_id }}
-    </div>
+    <div class="welcome">Welcome, {{ session.username }}</div>
+    <div class="empid">Employee ID : {{ session.user_id }}</div>
  </div>
 </nav>
- 
-<!-- ══ PAGE WRAPPER ════════════════════════════════════════ -->
-<div class="page-wrapper">
 
- <!-- Breadcrumb -->
+<div class="page-wrapper">
  <div class="breadcrumb-bar">
  <nav aria-label="breadcrumb">
  <ol class="breadcrumb">
  <li class="breadcrumb-item"><a href="/"><i class="fas fa-home me-1"></i>Home</a></li>
- <li class="breadcrumb-item"><a href="#">Department Dashboard</a></li>
  <li class="breadcrumb-item active">KPI Entry</li>
  </ol>
  </nav>
  </div>
  
- <!-- Page heading -->
- <div class="page-heading d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
- <div>
+ <div class="page-heading mb-3">
  <h4><i class="fas fa-pencil-alt me-2" style="color:var(--rly-gold)"></i>Department KPI Entry</h4>
  <p>Enter monthly and cumulative performance data for your department KPIs</p>
  </div>
- </div>
 
-<!-- Alert Messages -->
 {% if message %}
-<div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-    <i class="fas fa-check-circle me-2"></i>
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="alert alert-success alert-dismissible fade show mb-3">
+    <i class="fas fa-check-circle me-2"></i>{{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 {% endif %}
 
-<!-- Returned Items Section -->
 {% if returned_kpis and returned_kpis|length > 0 %}
-<div class="returned-section mb-4">
+<div class="returned-section mb-4" id="returnedSection">
     <div class="returned-header">
         <i class="fas fa-undo-alt"></i>
         <div>
@@ -462,39 +325,27 @@
             <p class="mb-0">Please review the HOD's remarks, update the data, and resubmit</p>
         </div>
     </div>
-    <div class="returned-items-list">
+    <div class="returned-items-list" id="returnedItemsList">
         {% for returned in returned_kpis %}
-        <div class="returned-item" id="returned-item-{{ returned.id }}">
+        <div class="returned-item" id="returned-item-{{ returned.id }}" data-id="{{ returned.id }}">
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge-returned">
-                            <i class="fas fa-clock"></i> Returned for Revision
-                        </span>
-                        <span class="text-muted small">
-                            <i class="fas fa-calendar-alt"></i> {{ returned.month }} {{ returned.year }}
-                        </span>
+                        <span class="badge-returned"><i class="fas fa-clock"></i> Returned for Revision</span>
+                        <span class="text-muted small"><i class="fas fa-calendar-alt"></i> {{ returned.month }} {{ returned.year }}</span>
                     </div>
-                    <div class="returned-kpi-name">
-                        <i class="fas fa-chart-line me-2"></i>{{ returned.kpi_name }}
-                    </div>
+                    <div class="returned-kpi-name">{{ returned.kpi_name }}</div>
                     <div class="returned-remarks mt-2">
                         <i class="fas fa-comment-dots"></i>
                         <strong>Remarks from HOD:</strong>
-                        <p class="returned-remarks-text mt-1 mb-0">{{ returned.remarks or 'No specific remarks provided. Please review the data and resubmit.' }}</p>
-                    </div>
-                    <div class="mt-2">
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> Current values - Monthly: {{ returned.performance_month or 'Not set' }}, 
-                            Cumulative: {{ returned.cumulative_performance or 'Not set' }}
-                        </small>
+                        <p class="returned-remarks-text mt-1 mb-0">{{ returned.remarks or 'No specific remarks provided.' }}</p>
                     </div>
                 </div>
                 <div class="ms-3 d-flex gap-2">
-                    <button class="btn-resubmit" onclick="scrollToKPI({{ returned.kpi_id }}, {{ returned.id }})">
+                    <button class="btn-resubmit" onclick="scrollToKPI({{ returned.kpi_id }})">
                         <i class="fas fa-edit me-1"></i> Review & Update
                     </button>
-                    <button class="btn-remove-return" onclick="removeReturnedItem({{ returned.id }}, '{{ returned.kpi_name }}')">
+                    <button class="btn-remove-return" data-id="{{ returned.id }}" data-name="{{ returned.kpi_name }}">
                         <i class="fas fa-trash-alt me-1"></i> Remove
                     </button>
                 </div>
@@ -504,256 +355,235 @@
     </div>
 </div>
 {% else %}
-<div class="alert alert-info mb-3" style="background: #e8f4fd; border-left: 4px solid #0d6efd;">
-    <i class="fas fa-info-circle me-2"></i>
-    No returned applications at this time. All your submissions are pending review or have been approved.
+<div class="alert alert-info mb-3">
+    <i class="fas fa-info-circle me-2"></i>No returned applications at this time.
 </div>
 {% endif %}
 
-<!-- Form -->
 <form method="POST" id="kpiForm">
 <div class="row mb-3">
     <div class="col-md-3">
         <label class="form-label">Month</label>
         <select name="month" class="form-select">
+            <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
+            <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
+            <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
+            <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>APRIL</option>
+            <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>MAY</option>
             <option value="JUNE" {% if selected_month == 'JUNE' %}selected{% endif %}>JUNE</option>
             <option value="JULY" {% if selected_month == 'JULY' %}selected{% endif %}>JULY</option>
             <option value="AUGUST" {% if selected_month == 'AUGUST' %}selected{% endif %}>AUGUST</option>
             <option value="SEPTEMBER" {% if selected_month == 'SEPTEMBER' %}selected{% endif %}>SEPTEMBER</option>
             <option value="OCTOBER" {% if selected_month == 'OCTOBER' %}selected{% endif %}>OCTOBER</option>
             <option value="NOVEMBER" {% if selected_month == 'NOVEMBER' %}selected{% endif %}>NOVEMBER</option>
-            <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>
-            <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
-            <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
-            <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
-            <option value="APRIL" {% if selected_month == 'APRIL' %}selected{% endif %}>APRIL</option>
-            <option value="MAY" {% if selected_month == 'MAY' %}selected{% endif %}>MAY</option>    
+            <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>    
         </select>
     </div>
-
     <div class="col-md-3">
         <label class="form-label">Year</label>
         <select name="year" class="form-select">
-            {% for y in range(2026,2037) %}
+            {% for y in range(2024, 2031) %}
                 <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
             {% endfor %}
         </select>
     </div>
 </div>
- 
- <!-- Table card -->
- <div class="table-card">
+
+<div class="table-card">
  <div class="table-card-header">
  <i class="fas fa-table" style="color:var(--rly-gold);"></i>
  <h6>KPI Performance Data Entry</h6>
  </div>
- 
  <div class="table-responsive">
  <table class="kpi-table">
  <thead>
- <tr>
-    <th>S.N</th>
-    <th>KPI</th>
-    <th>Unit</th>
-    <th>Annual Target</th>
-    <th>Previous Year</th>
-    <th>Performance For Month</th>
-    <th>Cumulative Performance upto the month</th>
-    <th>Cumulative Performance of Previous Year</th>
-  </tr>
+  <tr><th>S.N</th><th>KPI</th><th>Unit</th><th>Annual Target</th><th>Previous Year</th><th>Performance For Month</th><th>Cumulative (YTD)</th><th>Prev Year Cumulative</th></tr>
  </thead>
  <tbody>
  {% set current_section = namespace(value='') %}
  {% for kpi in kpis %}
     {% if current_section.value != kpi.section_name %}
-        <tr class="section-header-row">
-            <td colspan="8">
-                {{ kpi.section_name }}
-            </td>
-        </tr>
+        <tr class="section-header-row"><td colspan="8">{{ kpi.section_name }}</td></tr>
         {% set current_section.value = kpi.section_name %}
     {% endif %}
-    
     <tr id="kpi-row-{{ kpi.id }}" {% if kpi.status == 'RETURNED' %}class="table-warning"{% endif %}>
         <td class="sn-cell">{{ loop.index }}</td>
-        <td class="kpi-name-cell">
-            {{ kpi.kpi_name }}
-            {% if kpi.status == 'RETURNED' %}
-                <span class="badge-returned ms-2">
-                    <i class="fas fa-undo-alt"></i> Returned
-                </span>
-            {% endif %}
-        </td>
+        <td class="kpi-name-cell">{{ kpi.kpi_name }}</td>
         <td class="unit-cell">{{ kpi.unit }}</td>
         <td class="target-cell">{{ kpi.annual_target }}</td>
-        <td>
-            <input
-                type="number"
-                step="0.01"
-                name="prev_{{ kpi.id }}"
-                value="{{ kpi.previous_year_value if kpi.previous_year_value else '' }}"
-                class="kpi-input"
-                placeholder="0.00"
-                {% if kpi.department_id|int != user_department|int %}
-                readonly
-                {% endif %}
-            >
-        </td>
-        <td>
-            <input
-                type="number"
-                step="0.01"
-                name="month_{{ kpi.id }}"
-                value="{{ kpi.performance_month if kpi.performance_month else '' }}"
-                class="kpi-input"
-                placeholder="0.00"
-                {% if kpi.department_id|int != user_department|int %}
-                readonly
-                {% endif %}
-                {% if kpi.status == 'RETURNED' %}
-                style="border-color: var(--return-border); background: #fffbf0;"
-                {% endif %}
-            >
-            {% if kpi.status == 'RETURNED' and kpi.remarks %}
-            <small class="text-muted d-block mt-1">
-                <i class="fas fa-comment-dots text-warning"></i> 
-                <span class="text-warning" style="font-size: 0.7rem;">HOD Remarks: {{ kpi.remarks[:50] }}{% if kpi.remarks|length > 50 %}...{% endif %}</span>
-            </small>
-            {% endif %}
-        </td>
-        <td>
-            <input
-                type="number"
-                step="0.01"
-                name="cum_{{ kpi.id }}"
-                value="{{ kpi.cumulative_performance if kpi.cumulative_performance else '' }}"
-                class="kpi-input"
-                placeholder="0.00"
-                {% if kpi.department_id|int != user_department|int %}
-                readonly
-                {% endif %}
-            >
-        </td>
-        <td>
-            <input
-                type="number"
-                step="0.01"
-                name="prev_cum_{{ kpi.id }}"
-                value="{{ kpi.previous_year_cumulative if kpi.previous_year_cumulative else '' }}"
-                class="kpi-input"
-                placeholder="0.00"
-                {% if kpi.department_id|int != user_department|int %}
-                readonly
-                {% endif %}
-            >
-        </td>
-      </tr>
+        <td><input type="number" step="0.01" name="prev_{{ kpi.id }}" value="{{ kpi.previous_year_value or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
+        <td><input type="number" step="0.01" name="month_{{ kpi.id }}" value="{{ kpi.performance_month or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %} {% if kpi.status == 'RETURNED' %}style="border-color: var(--return-border); background: #fffbf0;"{% endif %}></td>
+        <td><input type="number" step="0.01" name="cum_{{ kpi.id }}" value="{{ kpi.cumulative_performance or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
+        <td><input type="number" step="0.01" name="prev_cum_{{ kpi.id }}" value="{{ kpi.previous_year_cumulative or '' }}" class="kpi-input" placeholder="0.00" {% if kpi.department_id|int != user_department|int %}readonly{% endif %}></td>
+    </tr>
  {% endfor %}
  </tbody>
- <tfoot>
- <tr>
-    <td colspan="8">
-        <i class="fas fa-info-circle me-1"></i>
-        Palakkad Division &nbsp;|&nbsp; Southern Railway &nbsp;|&nbsp; Government of India
-        {% if returned_kpis and returned_kpis|length > 0 %}
-        <span class="ms-3 text-warning">
-            <i class="fas fa-exclamation-triangle"></i> 
-            {{ returned_kpis|length }} KPI(s) returned for revision
-        </span>
-        {% endif %}
-      </tr>
-    </tfoot>
-  </table>
+ </table>
  </div>
- 
- <!-- Action buttons -->
  <div class="btn-area">
-    <button type="submit" name="action" value="draft" class="btn-draft">
-        <i class="fas fa-save"></i>Save Draft
-    </button>
-    <button type="submit" name="action" value="submit" class="btn-submit">
-        <i class="fas fa-paper-plane"></i>Submit To HOD
-    </button>
-    <span class="btn-hint">
-        <i class="fas fa-info-circle me-1"></i>
-        Save Draft to preserve data &nbsp;|&nbsp; Submit To HOD for final submission
-    </span>
+    <button type="submit" name="action" value="draft" class="btn-draft"><i class="fas fa-save"></i> Save Draft</button>
+    <button type="submit" name="action" value="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Submit To HOD</button>
+    <span class="btn-hint"><i class="fas fa-info-circle me-1"></i>Save Draft to preserve data | Submit To HOD for final submission</span>
  </div>
- </div>
+</div>
 </form>
-</div><!-- /page-wrapper -->
- 
-<!-- ══ FOOTER ══════════════════════════════════════════════ -->
+</div>
+
 <footer class="site-footer">
- <p><i class="fas fa-train me-1"></i><strong style="color:#fff;">Palakkad Division</strong> &nbsp;|&nbsp; Southern Railway &nbsp;|&nbsp; Government of India</p>
- <p class="gov"><i class="fas fa-shield-alt me-1"></i>Official Government Portal</p>
+ <p>Palakkad Division | Southern Railway | Government of India</p>
+ <p class="gov">Official Government Portal</p>
 </footer>
- 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
-// Function to scroll to a specific KPI row
-function scrollToKPI(kpiId, returnedId) {
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    toast.style.zIndex = '9999';
+    toast.style.minWidth = '300px';
+    toast.style.textAlign = 'center';
+    toast.style.zIndex = '10000';
+    toast.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.body.appendChild(toast);
+    setTimeout(() => { if(toast) toast.remove(); }, 3000);
+}
+
+function scrollToKPI(kpiId) {
     const targetRow = document.getElementById(`kpi-row-${kpiId}`);
     if (targetRow) {
         targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        targetRow.style.transition = 'background-color 0.5s';
         targetRow.style.backgroundColor = '#fff3cd';
-        setTimeout(() => {
-            targetRow.style.backgroundColor = '';
-        }, 3000);
-        
-        // Highlight the input field in the row
-        const monthInput = targetRow.querySelector('input[name^="month_"]');
-        if (monthInput) {
-            monthInput.focus();
-            monthInput.style.transition = 'border-color 0.3s';
-            monthInput.style.borderColor = '#ffc107';
-            monthInput.style.boxShadow = '0 0 0 3px rgba(255,193,7,0.2)';
-            setTimeout(() => {
-                monthInput.style.borderColor = '';
-                monthInput.style.boxShadow = '';
-            }, 3000);
-        }
+        setTimeout(() => targetRow.style.backgroundColor = '', 3000);
     }
 }
 
-// Function to remove a returned item
-function removeReturnedItem(returnId, kpiName) {
-    if (confirm(`Are you sure you want to remove the returned status for "${kpiName}"?\n\nThis will delete this entry and you will need to start fresh.`)) {
+// Global function to remove returned item
+window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
+    if (confirm(`⚠️ Remove "${kpiName}"?\n\nThis will DELETE this entry permanently. This action cannot be undone!`)) {
+        if (buttonElement) {
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Removing...';
+        }
+        
         fetch(`/remove_return/${returnId}`, {
             method: 'POST',
-            headers: {
+            headers: { 
                 'Content-Type': 'application/json',
-            }
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                location.reload();
+                showToast(data.message || 'KPI removed successfully', 'success');
+                
+                // Remove the item from DOM
+                const itemElement = document.getElementById(`returned-item-${returnId}`);
+                if (itemElement) {
+                    itemElement.style.transition = 'opacity 0.3s ease';
+                    itemElement.style.opacity = '0';
+                    setTimeout(() => {
+                        itemElement.remove();
+                        
+                        // Check if any returned items remain
+                        const remainingItems = document.querySelectorAll('.returned-item');
+                        const returnedSection = document.getElementById('returnedSection');
+                        
+                        if (remainingItems.length === 0 && returnedSection) {
+                            returnedSection.style.transition = 'opacity 0.3s ease';
+                            returnedSection.style.opacity = '0';
+                            setTimeout(() => {
+                                returnedSection.remove();
+                                // Show info message
+                                const infoDiv = document.createElement('div');
+                                infoDiv.className = 'alert alert-info mb-3';
+                                infoDiv.style.background = '#e8f4fd';
+                                infoDiv.style.borderLeft = '4px solid #0d6efd';
+                                infoDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i>No returned applications at this time.';
+                                const breadcrumb = document.querySelector('.breadcrumb-bar');
+                                if (breadcrumb) {
+                                    breadcrumb.insertAdjacentElement('afterend', infoDiv);
+                                }
+                            }, 300);
+                        } else {
+                            // Reattach event handlers to remaining remove buttons
+                            attachRemoveButtonHandlers();
+                        }
+                    }, 300);
+                } else {
+                    location.reload();
+                }
             } else {
-                alert('Error: ' + data.message);
+                showToast(data.message || 'Failed to remove', 'danger');
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove';
+                }
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while removing the returned item.');
+            showToast('Error: ' + error.message, 'danger');
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Remove';
+            }
         });
     }
+};
+
+// Function to attach event handlers to remove buttons
+function attachRemoveButtonHandlers() {
+    const removeButtons = document.querySelectorAll('.btn-remove-return');
+    removeButtons.forEach(btn => {
+        // Remove existing event listener to avoid duplicates
+        btn.removeEventListener('click', btn._listener);
+        
+        // Create new listener
+        const listener = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const returnId = this.getAttribute('data-id');
+            const kpiName = this.getAttribute('data-name');
+            if (returnId && kpiName) {
+                window.removeReturnedItem(returnId, kpiName, this);
+            }
+        };
+        
+        // Store listener reference and add event
+        btn._listener = listener;
+        btn.addEventListener('click', listener);
+    });
 }
 
-// Confirm before submit
+// Initialize event handlers when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    attachRemoveButtonHandlers();
+    
+    // Also handle dynamically added elements (if any)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                attachRemoveButtonHandlers();
+            }
+        });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+
+// Form submission confirmation
 document.querySelectorAll('form').forEach(form => {
     form.addEventListener('submit', function(e) {
-        const submitButton = e.submitter;
-        if (submitButton && submitButton.value === 'submit') {
-            const confirmMsg = confirm('Are you sure you want to submit these KPIs to HOD? Once submitted, you cannot modify until HOD returns them.');
-            if (!confirmMsg) {
-                e.preventDefault();
-            }
+        const btn = e.submitter;
+        if (btn && btn.value === 'submit' && !confirm('Submit KPIs to HOD? Once submitted, you cannot modify until returned.')) {
+            e.preventDefault();
         }
     });
 });
+
+console.log('Department KPI Entry form loaded');
 </script>
 </body>
 </html>
