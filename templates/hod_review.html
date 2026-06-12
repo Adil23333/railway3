@@ -37,6 +37,7 @@
  position: sticky;
  top: 0;
  z-index: 1000;
+ flex-wrap: wrap;
  }
  
  .logo-img {
@@ -56,12 +57,32 @@
  font-family: 'Noto Serif', serif;
  font-size: .92rem; font-weight: 700;
  color: #fff; letter-spacing: .04em;
- text-transform: uppercase; line-height: 1.2;
+ text-transform: uppercase;
+ line-height: 1.2;
  }
- .brand-sub { font-size: .62rem; color: var(--rly-gold); letter-spacing: .1em; text-transform: uppercase; }
- .nav-divider { width: 1px; height: 34px; background: rgba(255,255,255,.2); margin: 0 .5rem; }
- .app-name { font-size: .78rem; font-weight: 600; color: #c8d8f0; letter-spacing: .04em; text-transform: uppercase; }
- .app-sub { font-size: .65rem; color: rgba(255,255,255,.5); }
+ .brand-sub { 
+ font-size: .62rem; 
+ color: var(--rly-gold); 
+ letter-spacing: .1em; 
+ text-transform: uppercase; 
+ }
+ .nav-divider { 
+ width: 1px; 
+ height: 34px; 
+ background: rgba(255,255,255,.2); 
+ margin: 0 .5rem; 
+ }
+ .app-name { 
+ font-size: .78rem; 
+ font-weight: 600; 
+ color: #c8d8f0; 
+ letter-spacing: .04em; 
+ text-transform: uppercase; 
+ }
+ .app-sub { 
+ font-size: .65rem; 
+ color: rgba(255,255,255,.5); 
+ }
  
  .nav-controls {
  margin-left: auto;
@@ -122,7 +143,13 @@
  transform: translateY(-1px);
  }
  
- .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; }
+ .page-wrapper { 
+ flex: 1; 
+ padding: 1.75rem 1.5rem 5rem; 
+ max-width: 1600px; 
+ margin: 0 auto; 
+ width: 100%; 
+ }
  
  .breadcrumb-bar {
  background: #fff;
@@ -131,22 +158,36 @@
  padding: .5rem 1rem;
  margin-bottom: 1.25rem;
  }
- .breadcrumb { margin: 0; font-size: .78rem; }
- .breadcrumb-item a { color: var(--rly-light); text-decoration: none; }
- .breadcrumb-item a:hover { text-decoration: underline; }
+ .breadcrumb { 
+ margin: 0; 
+ font-size: .78rem; 
+ }
+ .breadcrumb-item a { 
+ color: var(--rly-light); 
+ text-decoration: none; 
+ }
+ .breadcrumb-item a:hover { 
+ text-decoration: underline; 
+ }
  
  .page-heading h4 {
  font-family: 'Noto Serif', serif;
- font-size: 1.15rem; font-weight: 700;
- color: var(--rly-blue); margin: 0;
+ font-size: 1.15rem; 
+ font-weight: 700;
+ color: var(--rly-blue); 
+ margin: 0;
  }
- .page-heading p { font-size: .78rem; color: #5c6b7a; margin: .2rem 0 0; }
+ .page-heading p { 
+ font-size: .78rem; 
+ color: #5c6b7a; 
+ margin: .2rem 0 0; 
+ }
  
  .table-card {
  background: #fff;
  border: 1px solid var(--border);
  border-radius: 8px;
- overflow: hidden;
+ overflow-x: auto;
  box-shadow: 0 2px 8px rgba(0,0,0,.07);
  }
  .table-card-header {
@@ -155,18 +196,30 @@
  display: flex;
  align-items: center;
  justify-content: space-between;
+ flex-wrap: wrap;
+ gap: 10px;
  }
  .table-card-header h6 {
- color: #fff; font-weight: 600; font-size: .88rem;
- margin: 0; letter-spacing: .02em;
+ color: #fff; 
+ font-weight: 600; 
+ font-size: .88rem;
+ margin: 0; 
+ letter-spacing: .02em;
  }
  
- .kpi-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+ .kpi-table { 
+ width: 100%; 
+ border-collapse: collapse; 
+ font-size: .82rem; 
+ min-width: 1200px;
+ }
  .kpi-table thead th {
  background: #f0f4f9;
  color: var(--rly-blue);
- font-weight: 700; font-size: .7rem;
- text-transform: uppercase; letter-spacing: .07em;
+ font-weight: 700; 
+ font-size: .7rem;
+ text-transform: uppercase; 
+ letter-spacing: .07em;
  padding: .7rem .9rem;
  border-bottom: 2px solid var(--border);
  white-space: nowrap;
@@ -175,29 +228,46 @@
  border-bottom: 1px solid #edf1f6;
  transition: background .12s;
  }
- .kpi-table tbody tr:hover { background: #f5f8fc; }
- .kpi-table tbody td { padding: .7rem .9rem; vertical-align: middle; }
+ .kpi-table tbody tr:hover { 
+ background: #f5f8fc; 
+ }
+ .kpi-table tbody td { 
+ padding: .7rem .9rem; 
+ vertical-align: middle; 
+ }
  .kpi-table tfoot td {
  background: #f7f9fc;
- font-size: .72rem; color: #5c6b7a;
+ font-size: .72rem; 
+ color: #5c6b7a;
  padding: .55rem .9rem;
  border-top: 1px solid var(--border);
  }
  
  .badge-status {
- font-size: .7rem; font-weight: 700;
- padding: .3rem .65rem; border-radius: 12px;
+ font-size: .7rem; 
+ font-weight: 700;
+ padding: .3rem .65rem; 
+ border-radius: 12px;
  letter-spacing: .04em;
  display: inline-flex;
  align-items: center;
  gap: .35rem;
  white-space: nowrap;
  }
- .badge-submitted { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
- .badge-approved { background: #d1e7dd; color: #0a5c36; border: 1px solid #198754; }
+ .badge-submitted { 
+ background: #fff3cd; 
+ color: #856404; 
+ border: 1px solid #ffc107; 
+ }
+ .badge-approved { 
+ background: #d1e7dd; 
+ color: #0a5c36; 
+ border: 1px solid #198754; 
+ }
  
  .btn-return {
- background: #dc3545; color: #fff;
+ background: #dc3545; 
+ color: #fff;
  border: none;
  border-radius: 5px;
  padding: .3rem .9rem;
@@ -210,7 +280,11 @@
  transition: all .15s;
  cursor: pointer;
  }
- .btn-return:hover { background: #bb2d3b; color: #fff; transform: translateY(-1px); }
+ .btn-return:hover { 
+ background: #bb2d3b; 
+ color: #fff; 
+ transform: translateY(-1px); 
+ }
  .btn-return:disabled {
  background: #6c757d;
  cursor: not-allowed;
@@ -218,7 +292,8 @@
  }
  
  .btn-approve-bulk {
- background: #198754; color: #fff;
+ background: #198754; 
+ color: #fff;
  border: none;
  border-radius: 5px;
  padding: .3rem 1rem;
@@ -230,7 +305,10 @@
  transition: all .15s;
  cursor: pointer;
  }
- .btn-approve-bulk:hover { background: #157347; transform: translateY(-1px); }
+ .btn-approve-bulk:hover { 
+ background: #157347; 
+ transform: translateY(-1px); 
+ }
  
  .submission-date {
  font-size: .7rem;
@@ -251,7 +329,9 @@
  background: #e8f0fe;
  padding: .3rem .7rem;
  border-radius: 8px;
- display: inline-block;
+ display: inline-flex;
+ align-items: center;
+ gap: 8px;
  }
  
  .info-badge {
@@ -295,20 +375,107 @@
  transform: translateY(-1px);
  }
  
+ /* Performance Indicator Styles - SWAPPED */
+ .text-success {
+    color: #198754 !important;
+ }
+
+ .text-danger {
+    color: #dc3545 !important;
+ }
+
+ .fa-check-circle, .fa-exclamation-triangle {
+    transition: all 0.2s ease;
+    cursor: help;
+ }
+
+ /* Animation for indicator */
+ @keyframes indicatorPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+ }
+
+ .performance-indicator {
+    animation: indicatorPop 0.2s ease;
+ }
+ 
  .site-footer {
  background: var(--rly-blue);
  border-top: 2px solid var(--rly-gold);
  padding: .5rem 1.5rem;
- display: flex; align-items: center; justify-content: space-between;
- flex-wrap: wrap; gap: .5rem;
+ display: flex; 
+ align-items: center; 
+ justify-content: space-between;
+ flex-wrap: wrap; 
+ gap: .5rem;
  }
- .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
- .site-footer .gov { font-size: .65rem; color: var(--rly-gold); font-weight: 600; }
+ .site-footer p { 
+ font-size: .68rem; 
+ color: rgba(255,255,255,.65); 
+ margin: 0; 
+ }
+ .site-footer .gov { 
+ font-size: .65rem; 
+ color: var(--rly-gold); 
+ font-weight: 600; 
+ }
  
- @media (max-width: 780px) {
- .top-navbar { flex-wrap: wrap; padding: 0.6rem 1rem; }
- .nav-controls { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 4px; }
- .kpi-table thead th, .kpi-table tbody td { padding: .5rem .6rem; }
+ @media (max-width: 992px) {
+ .top-navbar { 
+ flex-direction: column; 
+ text-align: center; 
+ }
+ .nav-controls { 
+ margin-left: 0; 
+ width: 100%; 
+ justify-content: center; 
+ margin-top: 10px; 
+ }
+ .nav-divider { 
+ display: none; 
+ }
+ .page-wrapper { 
+ padding: 1rem; 
+ }
+ }
+ 
+ @media (max-width: 768px) {
+ .kpi-table { 
+ font-size: .75rem; 
+ }
+ .kpi-table tbody td, 
+ .kpi-table thead th { 
+ padding: .5rem .4rem; 
+ }
+ .perf-value { 
+ font-size: .75rem; 
+ padding: .2rem .4rem; 
+ }
+ }
+ 
+ /* Highlight rows - SWAPPED: Red for Needs Improvement, Green for On Track */
+ tr.has-red-indicator {
+    border-left: 3px solid #dc3545;
+    background-color: #fff8f8;
+ }
+ 
+ tr.has-green-indicator {
+    border-left: 3px solid #198754;
+ }
+
+ /* KPI Name styling */
+ .kpi-name-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+    word-break: break-word;
+ }
+ 
+ /* Expected/Actual text styling */
+ .comparison-text {
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-top: 4px;
+    display: block;
  }
  </style>
 </head>
@@ -360,10 +527,10 @@
 
  <div class="filter-section">
   <form method="GET" action="/hod" id="filterForm">
-   <div class="row align-items-end">
+   <div class="row g-3 align-items-end">
     <div class="col-md-3">
      <label class="filter-label"><i class="fas fa-calendar-alt me-1"></i>Month</label>
-     <select name="month" class="form-select">
+     <select name="month" class="form-select" onchange="this.form.submit()">
       <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>January</option>
       <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>February</option>
       <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>March</option>
@@ -380,7 +547,7 @@
     </div>
     <div class="col-md-2">
      <label class="filter-label"><i class="fas fa-calendar-week me-1"></i>Year</label>
-     <select name="year" class="form-select">
+     <select name="year" class="form-select" onchange="this.form.submit()">
       {% for y in range(2024, 2031) %}
        <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
       {% endfor %}
@@ -391,7 +558,7 @@
       <i class="fas fa-filter"></i> Apply Filter
      </button>
     </div>
-    <div class="col-md-5 text-end">
+    <div class="col-md-5 text-md-end">
      <span class="badge-status badge-submitted">
       <i class="fas fa-calendar-check"></i> Reviewing: {{ selected_month }} {{ selected_year }}
      </span>
@@ -412,60 +579,97 @@
   </div>
  
   <div class="table-responsive">
-   <table class="kpi-table table table-hover">
+   <table class="kpi-table">
     <thead>
      <tr>
        <th width="5%"><input type="checkbox" id="selectAll"></th>
        <th width="5%">#</th>
-       <th width="20%">KPI Name</th>
+       <th width="22%">KPI Name</th>
        <th width="10%">Monthly Value</th>
-       <th width="12%">Previous Year (Full)</th>
-       <th width="12%">Cumulative (YTD)</th>
-       <th width="12%">Prev Year Cumulative</th>
+       <th width="10%">Previous Year (Full)</th>
+       <th width="15%">Cumulative (YTD)</th>
+       <th width="10%">Prev Year Cumulative</th>
        <th width="10%">Submitted On</th>
        <th width="8%">Status</th>
        <th width="8%">Action</th>
       </tr>
     </thead>
     <tbody>
+     {% set month_map = {'JANUARY':1, 'FEBRUARY':2, 'MARCH':3, 'APRIL':4, 'MAY':5, 'JUNE':6, 'JULY':7, 'AUGUST':8, 'SEPTEMBER':9, 'OCTOBER':10, 'NOVEMBER':11, 'DECEMBER':12} %}
+     {% set current_month_num = month_map[selected_month] %}
+     
      {% for row in rows %}
-     <tr>
+      {# CORRECT FORMULA: Use Annual Target #}
+      {% set annual_target = row.annual_target|float if row.annual_target else 0 %}
+      {% set cumulative_val = row.cumulative_val|float if row.cumulative_val else 0 %}
+      {% set expected_ytd = (annual_target / 12) * current_month_num if annual_target > 0 else 0 %}
+      
+      {# SWAPPED: RED = Needs Improvement (Expected > Actual), GREEN = On Track (Expected ≤ Actual) #}
+      {% set is_red = expected_ytd > cumulative_val and annual_target > 0 and cumulative_val > 0 %}
+      {% set is_green = expected_ytd <= cumulative_val and annual_target > 0 and cumulative_val > 0 %}
+      
+      <tr id="kpi-row-{{ row.id }}" class="{% if is_red %}has-red-indicator{% elif is_green %}has-green-indicator{% endif %}">
        <td class="text-center">
         {% if row.status == 'SUBMITTED' %}
-         <input type="checkbox" class="kpi-checkbox" value="{{ row.id }}">
+         <input type="checkbox" class="kpi-checkbox" value="{{ row.id }}" data-indicator="{% if is_red %}danger{% elif is_green %}success{% endif %}">
         {% endif %}
         </td>
-       <td class="sn-cell">{{ loop.index }}</td>
-       <td>
+       <td class="text-center sn-cell">{{ loop.index }}</td>
+       <td class="kpi-name-cell">
         <strong>{{ row.kpi_name }}</strong>
         {% if row.unit %}
          <br><small class="text-muted">({{ row.unit }})</small>
         {% endif %}
-       </td>
-       <td>
-        <span class="perf-value">
-         {{ row.performance_month if row.performance_month is not none else '-' }}
-        </span>
-       </td>
-       <td>
+        <br><small class="text-muted"><i class="fas fa-bullseye"></i> Annual Target: {{ row.annual_target or 'N/A' }}</small>
+        </td>
+       <td class="text-center monthly-cell">
+         <span class="perf-value">
+          <i class="fas fa-calendar-day"></i> 
+          {{ row.performance_month if row.performance_month is not none and row.performance_month != '-' else '-' }}
+         </span>
+         </td>
+       <td class="text-center prev-year-cell">
         <span class="info-badge">
          <i class="fas fa-database"></i> 
          {{ row.previous_year_value if row.previous_year_value is not none else 'Not Available' }}
         </span>
-       </td>
-       <td>
-        <span class="perf-value" style="background:#d4edda;">
-         <i class="fas fa-chart-line"></i> 
-         {{ row.cumulative_performance if row.cumulative_performance is not none else '-' }}
-        </span>
-       </td>
-       <td>
+        </td>
+       <td class="cumulative-cell">
+         <div class="perf-value">
+          <i class="fas fa-chart-line"></i> 
+          {{ row.cumulative_performance if row.cumulative_performance is not none and row.cumulative_performance != '-' else '-' }}
+          {% if annual_target > 0 and cumulative_val > 0 %}
+            {% if is_red %}
+             <i class="fas fa-exclamation-triangle text-danger performance-indicator" 
+                style="font-size: 1.1rem;" 
+                title="🔴 Needs Improvement: Expected YTD ({{ '%.1f'|format(expected_ytd) }}) > Actual Cumulative ({{ '%.1f'|format(cumulative_val) }})">
+             </i>
+            {% elif is_green %}
+             <i class="fas fa-check-circle text-success performance-indicator" 
+                style="font-size: 1.1rem;" 
+                title="🟢 On Track: Expected YTD ({{ '%.1f'|format(expected_ytd) }}) ≤ Actual Cumulative ({{ '%.1f'|format(cumulative_val) }})">
+             </i>
+            {% endif %}
+          {% elif annual_target > 0 %}
+            <i class="fas fa-info-circle text-info performance-indicator" 
+               style="font-size: 1.1rem;" 
+               title="ℹ️ Expected YTD = ({{ annual_target }} ÷ 12) × {{ current_month_num }} = {{ '%.1f'|format(expected_ytd) }}">
+            </i>
+          {% endif %}
+         </div>
+         {% if annual_target > 0 and cumulative_val > 0 %}
+         <small class="comparison-text">
+           <i class="fas fa-chart-simple"></i> Expected: {{ '%.1f'|format(expected_ytd) }} | Actual: {{ '%.1f'|format(cumulative_val) }}
+         </small>
+         {% endif %}
+         </td>
+       <td class="text-center prev-cumulative-cell">
         <span class="info-badge">
          <i class="fas fa-chart-simple"></i> 
          {{ row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year is not none else 'Not Available' }}
         </span>
-       </td>
-       <td>
+        </td>
+       <td class="text-center submission-date-cell">
         {% if row.created_at %}
          <span class="submission-date">
           <i class="far fa-calendar-alt"></i> 
@@ -478,13 +682,13 @@
         {% else %}
          <span class="text-muted">-</span>
         {% endif %}
-       </td>
-       <td>
+        </td>
+       <td class="text-center status-cell">
         <span class="badge-status badge-submitted">
          <i class="fas fa-clock"></i> {{ row.status }}
         </span>
-       </td>
-       <td>
+        </td>
+       <td class="text-center action-cell">
         {% if row.status == 'SUBMITTED' %}
          <a href="/return/{{ row.id }}" class="btn-return btn-sm">
           <i class="fas fa-undo-alt"></i> Return
@@ -494,26 +698,46 @@
           <i class="fas fa-ban"></i> Return
          </button>
         {% endif %}
-       </td>
-     </tr>
+        </td>
+       </tr>
      {% else %}
-     <tr>
+      <tr>
        <td colspan="10" class="text-center py-5">
         <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
         <h6 class="text-muted">No KPI submissions found</h6>
         <small class="text-muted">No records with 'SUBMITTED' status for {{ selected_month }} {{ selected_year }}</small>
+        </td>
        </td>
-     </tr>
      {% endfor %}
     </tbody>
     <tfoot>
       <tr>
        <td colspan="10" class="text-muted">
-        <i class="fas fa-info-circle me-1"></i>
-        <strong>Note:</strong> Previous Year (Full) = Previous year's total/annual value | 
-        Cumulative (YTD) = Year-to-date performance up to selected month |
-        Prev Year Cumulative = Previous year's cumulative up to same month
-       </td>
+        <div class="row g-3">
+         <div class="col-md-6">
+          <i class="fas fa-info-circle me-1"></i>
+          <strong>Performance Indicators (SWAPPED):</strong><br>
+          <i class="fas fa-exclamation-triangle text-danger"></i> <strong>Red (🔴)</strong> = Needs Improvement (Expected YTD > Actual Cumulative)<br>
+          <i class="fas fa-check-circle text-success"></i> <strong>Green (🟢)</strong> = On Track (Expected YTD ≤ Actual Cumulative)<br>
+          <i class="fas fa-info-circle text-info"></i> <strong>Blue</strong> = Info (Shows expected calculation)
+         </div>
+         <div class="col-md-6">
+          <small class="text-muted">
+           <i class="fas fa-calculator me-1"></i>
+           <strong>Formula:</strong> Expected YTD = (Annual Target ÷ 12) × Number of months passed<br>
+           <i class="fas fa-calendar-alt me-1"></i>
+           <strong>{{ selected_month }}:</strong> {{ current_month_num }} month(s) passed
+          </small>
+          <div class="alert alert-light mt-2 mb-0 p-2 small">
+           <i class="fas fa-lightbulb text-warning"></i> 
+           <strong>Example:</strong> Annual Target=1200, {{ selected_month }}={{ current_month_num }} months<br>
+           → Expected = (1200÷12)×{{ current_month_num }} = {{ '%.1f'|format((1200/12)*current_month_num) }}<br>
+           <strong>🔴 Red:</strong> If Actual Cumulative = 500 (Needs Improvement - below expected)<br>
+           <strong>🟢 Green:</strong> If Actual Cumulative = 700 (On Track - exceeded expected)
+          </div>
+         </div>
+        </div>
+        </td>
       </tr>
     </tfoot>
    </table>
@@ -543,20 +767,36 @@
    const selectAllCheckbox = document.getElementById("selectAll");
    if (selectAllCheckbox) {
      selectAllCheckbox.addEventListener("change", function() {
-       document.querySelectorAll(".kpi-checkbox").forEach(cb => {
+       const checkboxes = document.querySelectorAll(".kpi-checkbox");
+       checkboxes.forEach(cb => {
          cb.checked = this.checked;
        });
      });
    }
    
-   // Return button confirmation
+   // Return button confirmation with indicator info (SWAPPED)
    const returnBtns = document.querySelectorAll('.btn-return:not([disabled])');
    returnBtns.forEach(btn => {
      btn.addEventListener('click', function(e) {
-       const kpiName = this.closest('tr')?.querySelector('td:nth-child(3) strong')?.innerText || 'this KPI';
-       const remarks = prompt(`Return "${kpiName}" to department for revision.\n\nPlease provide remarks/reason for return:`, 'Needs revision or clarification');
+       const row = this.closest('tr');
+       const kpiName = row?.querySelector('.kpi-name-cell strong')?.innerText || 'this KPI';
+       const cumulativeSpan = row?.querySelector('.cumulative-cell .perf-value');
+       const hasGreen = cumulativeSpan?.querySelector('.text-success') !== null;
+       const hasRed = cumulativeSpan?.querySelector('.text-danger') !== null;
+       const statusText = hasRed ? '🔴 RED - Needs Improvement' : (hasGreen ? '🟢 GREEN - On Track' : 'ℹ️ Info Only');
+       
+       const remarks = prompt(
+         `📋 Return KPI: "${kpiName}"\n\nCurrent Status: ${statusText}\n\nPlease provide detailed remarks/reason for return:`, 
+         'Needs revision or clarification'
+       );
        
        if (remarks === null) {
+         e.preventDefault();
+         return false;
+       }
+       
+       if (remarks.trim() === '') {
+         alert('⚠️ Please provide remarks before returning the KPI.');
          e.preventDefault();
          return false;
        }
@@ -569,7 +809,7 @@
      });
    });
    
-   // Bulk approve
+   // Bulk approve with warning for green indicators (Needs Improvement)
    const bulkApproveBtn = document.getElementById("approveSelectedBtn");
    if (bulkApproveBtn) {
      bulkApproveBtn.addEventListener("click", function() {
@@ -577,13 +817,26 @@
        const ids = Array.from(checkedBoxes).map(cb => cb.value);
        
        if (ids.length === 0) {
-         alert("Please select at least one KPI to approve.");
+         alert("⚠️ Please select at least one KPI to approve.");
          return;
        }
        
-       if (!confirm(`Approve ${ids.length} selected KPI(s)?\n\nApproved records will be forwarded to the Nodal Officer.`)) {
+       // Check if any selected KPI has green indicator (Needs Improvement)
+       const greenIndicators = Array.from(checkedBoxes).filter(cb => cb.getAttribute('data-indicator') === 'success');
+       
+       let confirmMessage = `✅ Approve ${ids.length} selected KPI(s)?\n\nApproved records will be forwarded to the Nodal Officer.`;
+       
+       if (greenIndicators.length > 0) {
+         confirmMessage = `⚠️⚠️⚠️ WARNING: ${greenIndicators.length} selected KPI(s) show "Needs Improvement" (Green indicator).\n\n${confirmMessage}\n\nDo you still want to approve these items?`;
+       }
+       
+       if (!confirm(confirmMessage)) {
          return;
        }
+       
+       // Show loading state
+       bulkApproveBtn.disabled = true;
+       bulkApproveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
        
        fetch("/approve_bulk", {
          method: "POST",
@@ -592,15 +845,37 @@
        })
        .then(response => response.json())
        .then(data => {
-         alert(data.message || "Bulk approval completed successfully.");
+         alert(data.message || "✅ Bulk approval completed successfully.");
          location.reload();
        })
        .catch(error => {
          console.error("Error:", error);
-         alert("Error in bulk approval. Please try again.");
+         alert("❌ Error in bulk approval. Please try again.");
+         bulkApproveBtn.disabled = false;
+         bulkApproveBtn.innerHTML = '<i class="fas fa-check-double"></i> Approve Selected';
        });
      });
    }
+   
+   // Add animation to indicators on page load
+   const indicators = document.querySelectorAll('.performance-indicator');
+   console.log(`✅ Found ${indicators.length} performance indicators on page load (SWAPPED: Red=Needs Improvement, Green=On Track)`);
+   indicators.forEach(indicator => {
+     indicator.style.animation = 'indicatorPop 0.3s ease';
+     setTimeout(() => {
+       if (indicator) indicator.style.animation = '';
+     }, 300);
+   });
+   
+   // Toggle select all when individual checkboxes change
+   document.querySelectorAll('.kpi-checkbox').forEach(cb => {
+     cb.addEventListener('change', function() {
+       const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
+       if (selectAllCheckbox) {
+         selectAllCheckbox.checked = allChecked;
+       }
+     });
+   });
 })();
 </script>
 </body>

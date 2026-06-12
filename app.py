@@ -12,7 +12,29 @@ app.secret_key = "railway_secret"
 
 app.config.from_object("config.Config")
 
+# Add connection pooling to prevent database disconnections
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 3600,
+    'pool_size': 10,
+    'max_overflow': 20
+}
+
 db = SQLAlchemy(app)
+
+# Add connection check before each request
+@app.before_request
+def before_request():
+    """Ensure database connection is alive before each request"""
+    try:
+        db.session.execute(db.text("SELECT 1"))
+    except Exception:
+        db.session.rollback()
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """Close session after each request"""
+    db.session.remove()
 
 def copy_to_approved_table(monthly_data_id):
     """Copy a record from monthly_data to approved_data table - ONLY called when DRM approves"""
@@ -205,6 +227,7 @@ def drm():
     except ValueError:
         selected_year = 2026
 
+    # Query to get all FORWARDED_TO_DRM KPIs with performance data and annual targets
     result = db.session.execute(
         db.text("""
             SELECT
@@ -213,10 +236,12 @@ def drm():
                 md.cumulative_performance,
                 md.status,
                 md.remarks,
-                k.kpi_name
+                md.created_at,
+                k.kpi_name,
+                k.annual_target,
+                COALESCE(k.unit, '') as unit
             FROM monthly_data md
-            JOIN kpis k
-            ON md.kpi_id = k.id
+            JOIN kpis k ON md.kpi_id = k.id
             WHERE md.status = 'FORWARDED_TO_DRM'
             AND md.month = :month
             AND md.year = :year
@@ -229,10 +254,45 @@ def drm():
     )
 
     rows = result.fetchall()
+    
+    # Convert to list of dictionaries with calculated values for indicators
+    rows_list = []
+    for row in rows:
+        # Safely convert values to float for calculation
+        try:
+            monthly_val = float(row.performance_month) if row.performance_month and row.performance_month != '-' else 0
+        except (ValueError, TypeError):
+            monthly_val = 0
+            
+        try:
+            cumulative_val = float(row.cumulative_performance) if row.cumulative_performance and row.cumulative_performance != '-' else 0
+        except (ValueError, TypeError):
+            cumulative_val = 0
+            
+        try:
+            annual_target = float(row.annual_target) if row.annual_target else 0
+        except (ValueError, TypeError):
+            annual_target = 0
+        
+        row_dict = {
+            'id': row.id,
+            'performance_month': row.performance_month if row.performance_month is not None else '-',
+            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
+            'status': row.status,
+            'remarks': row.remarks,
+            'created_at': row.created_at,
+            'kpi_name': row.kpi_name,
+            'annual_target': row.annual_target,
+            'unit': row.unit,
+            'monthly_val': monthly_val,
+            'cumulative_val': cumulative_val,
+            'annual_target_val': annual_target
+        }
+        rows_list.append(row_dict)
 
     return render_template(
         "drm.html",
-        rows=rows,
+        rows=rows_list,
         selected_month=selected_month,
         selected_year=selected_year
     )
@@ -644,8 +704,8 @@ def hod():
                 md.year,
                 md.remarks,
                 md.created_at,
-                COALESCE(md.previous_year_value, 0) as previous_year_value,
-                COALESCE(md.cumulative_performance_of_prev_year, 0) as cumulative_performance_of_prev_year,
+                COALESCE(CAST(md.previous_year_value AS DECIMAL(10,2)), 0) as previous_year_value,
+                COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
                 COALESCE(k.unit, '') as unit,
                 k.annual_target,
@@ -672,6 +732,17 @@ def hod():
     # Convert to list of dictionaries
     rows_list = []
     for row in rows:
+        # Safely convert values to float for calculation
+        try:
+            monthly_val = float(row.performance_month) if row.performance_month and row.performance_month != '-' else 0
+        except (ValueError, TypeError):
+            monthly_val = 0
+            
+        try:
+            cumulative_val = float(row.cumulative_performance) if row.cumulative_performance and row.cumulative_performance != '-' else 0
+        except (ValueError, TypeError):
+            cumulative_val = 0
+        
         row_dict = {
             'id': row.id,
             'performance_month': row.performance_month if row.performance_month is not None else '-',
@@ -687,7 +758,9 @@ def hod():
             'unit': row.unit,
             'annual_target': row.annual_target,
             'section_name': row.section_name,
-            'dept_name': row.dept_name
+            'dept_name': row.dept_name,
+            'monthly_val': monthly_val,
+            'cumulative_val': cumulative_val
         }
         rows_list.append(row_dict)
     
@@ -768,23 +841,35 @@ def return_entry(id):
             db.session.rollback()
             return f"Error: {str(e)}", 500
     
-    # GET request - show the return form
-    result = db.session.execute(
-        db.text("""
-            SELECT 
-                md.id,
-                k.kpi_name,
-                md.performance_month,
-                md.cumulative_performance
-            FROM monthly_data md
-            JOIN kpis k ON md.kpi_id = k.id
-            WHERE md.id = :id
-        """),
-        {"id": id}
-    )
-    kpi = result.fetchone()
-    
-    return render_template("return_form.html", kpi=kpi)
+    # GET request - show the return form with error handling
+    try:
+        # Test connection first
+        db.session.execute(db.text("SELECT 1"))
+        
+        result = db.session.execute(
+            db.text("""
+                SELECT 
+                    md.id,
+                    k.kpi_name,
+                    md.performance_month,
+                    md.cumulative_performance
+                FROM monthly_data md
+                JOIN kpis k ON md.kpi_id = k.id
+                WHERE md.id = :id
+            """),
+            {"id": id}
+        )
+        kpi = result.fetchone()
+        
+        if not kpi:
+            return "KPI not found", 404
+        
+        return render_template("return_form.html", kpi=kpi)
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in return_entry GET: {str(e)}")
+        return f"Database error: {str(e)}. Please try again.", 500
 
 @app.route("/nodal")
 def nodal():
@@ -796,33 +881,38 @@ def nodal():
 
     selected_month = request.args.get("month", "JUNE")
     selected_year = request.args.get("year", "2026")
-    
+
     try:
         selected_year = int(selected_year)
     except ValueError:
         selected_year = 2026
 
+    # Query to get all APPROVED KPIs with annual targets for performance indicators
     result = db.session.execute(
         db.text("""
             SELECT
                 md.id,
                 md.performance_month,
-                md.previous_year_value,
                 md.cumulative_performance,
-                md.cumulative_performance_of_prev_year,
                 md.status,
+                md.month,
+                md.year,
                 md.remarks,
+                md.created_at,
+                COALESCE(CAST(md.previous_year_value AS DECIMAL(10,2)), 0) as previous_year_value,
+                COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
+                COALESCE(k.unit, '') as unit,
+                k.annual_target,
+                k.section_name,
                 d.dept_name
             FROM monthly_data md
-            JOIN kpis k
-            ON md.kpi_id = k.id
-            JOIN departments d
-            ON k.department_id = d.id
+            JOIN kpis k ON md.kpi_id = k.id
+            JOIN departments d ON k.department_id = d.id
             WHERE md.status = 'APPROVED'
-            AND md.month = :month
+            AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
-            ORDER BY k.id
+            ORDER BY k.display_order, k.id
         """),
         {
             "month": selected_month,
@@ -831,10 +921,51 @@ def nodal():
     )
 
     rows = result.fetchall()
+    
+    # Convert to list of dictionaries with calculated values for indicators
+    rows_list = []
+    for row in rows:
+        # Safely convert values to float for calculation
+        try:
+            monthly_val = float(row.performance_month) if row.performance_month and row.performance_month != '-' else 0
+        except (ValueError, TypeError):
+            monthly_val = 0
+            
+        try:
+            cumulative_val = float(row.cumulative_performance) if row.cumulative_performance and row.cumulative_performance != '-' else 0
+        except (ValueError, TypeError):
+            cumulative_val = 0
+            
+        try:
+            annual_target = float(row.annual_target) if row.annual_target else 0
+        except (ValueError, TypeError):
+            annual_target = 0
+        
+        row_dict = {
+            'id': row.id,
+            'performance_month': row.performance_month if row.performance_month is not None else '-',
+            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
+            'status': row.status,
+            'month': row.month,
+            'year': row.year,
+            'remarks': row.remarks,
+            'created_at': row.created_at,
+            'previous_year_value': row.previous_year_value if row.previous_year_value and row.previous_year_value != 0 else 'Not Available',
+            'cumulative_performance_of_prev_year': row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year and row.cumulative_performance_of_prev_year != 0 else 'Not Available',
+            'kpi_name': row.kpi_name,
+            'unit': row.unit,
+            'annual_target': row.annual_target,
+            'section_name': row.section_name,
+            'dept_name': row.dept_name,
+            'monthly_val': monthly_val,
+            'cumulative_val': cumulative_val,
+            'annual_target_val': annual_target
+        }
+        rows_list.append(row_dict)
 
     return render_template(
         "nodal.html",
-        rows=rows,
+        rows=rows_list,
         selected_month=selected_month,
         selected_year=selected_year
     )
@@ -855,27 +986,32 @@ def adrm():
     except ValueError:
         selected_year = 2026
 
+    # Query to get all FORWARDED_TO_ADRM KPIs with annual targets for performance indicators
     result = db.session.execute(
         db.text("""
             SELECT
                 md.id,
                 md.performance_month,
                 md.cumulative_performance,
-                md.previous_year_value,
-                md.cumulative_performance_of_prev_year,
                 md.status,
+                md.month,
+                md.year,
                 md.remarks,
+                md.created_at,
+                COALESCE(CAST(md.previous_year_value AS DECIMAL(10,2)), 0) as previous_year_value,
+                COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
+                COALESCE(k.unit, '') as unit,
+                k.annual_target,
+                k.section_name,
                 d.dept_name
             FROM monthly_data md
-            JOIN kpis k
-            ON md.kpi_id = k.id
-            JOIN departments d
-            ON k.department_id = d.id
+            JOIN kpis k ON md.kpi_id = k.id
+            JOIN departments d ON k.department_id = d.id
             WHERE md.status = 'FORWARDED_TO_ADRM'
-            AND md.month = :month
+            AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
-            ORDER BY k.id
+            ORDER BY k.display_order, k.id
         """),
         {
             "month": selected_month,
@@ -884,10 +1020,51 @@ def adrm():
     )
 
     rows = result.fetchall()
+    
+    # Convert to list of dictionaries with calculated values for indicators
+    rows_list = []
+    for row in rows:
+        # Safely convert values to float for calculation
+        try:
+            monthly_val = float(row.performance_month) if row.performance_month and row.performance_month != '-' else 0
+        except (ValueError, TypeError):
+            monthly_val = 0
+            
+        try:
+            cumulative_val = float(row.cumulative_performance) if row.cumulative_performance and row.cumulative_performance != '-' else 0
+        except (ValueError, TypeError):
+            cumulative_val = 0
+            
+        try:
+            annual_target = float(row.annual_target) if row.annual_target else 0
+        except (ValueError, TypeError):
+            annual_target = 0
+        
+        row_dict = {
+            'id': row.id,
+            'performance_month': row.performance_month if row.performance_month is not None else '-',
+            'cumulative_performance': row.cumulative_performance if row.cumulative_performance is not None else '-',
+            'status': row.status,
+            'month': row.month,
+            'year': row.year,
+            'remarks': row.remarks,
+            'created_at': row.created_at,
+            'previous_year_value': row.previous_year_value if row.previous_year_value and row.previous_year_value != 0 else 'Not Available',
+            'cumulative_performance_of_prev_year': row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year and row.cumulative_performance_of_prev_year != 0 else 'Not Available',
+            'kpi_name': row.kpi_name,
+            'unit': row.unit,
+            'annual_target': row.annual_target,
+            'section_name': row.section_name,
+            'dept_name': row.dept_name,
+            'monthly_val': monthly_val,
+            'cumulative_val': cumulative_val,
+            'annual_target_val': annual_target
+        }
+        rows_list.append(row_dict)
 
     return render_template(
         "adrm.html",
-        rows=rows,
+        rows=rows_list,
         selected_month=selected_month,
         selected_year=selected_year
     )
