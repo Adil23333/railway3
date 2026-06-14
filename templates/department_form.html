@@ -28,6 +28,7 @@
  flex-direction: column;
  }
  
+ /* Top Navbar – same styling as HOD page with emblem & logout */
  .top-navbar {
  background: var(--rly-blue);
  border-bottom: 3px solid var(--rly-gold);
@@ -39,19 +40,111 @@
  position: sticky;
  top: 0;
  z-index: 1000;
+ flex-wrap: wrap;
  }
  
- .ir-logo { width: 42px; height: 42px; flex-shrink: 0; }
+ .logo-img {
+ height: 42px;
+ width: auto;
+ display: block;
+ }
+ 
+ .emblem {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ flex-shrink: 0;
+ }
+ 
  .brand-title {
  font-family: 'Noto Serif', serif;
  font-size: .92rem; font-weight: 700;
  color: #fff; letter-spacing: .04em;
- text-transform: uppercase; line-height: 1.2;
+ text-transform: uppercase;
+ line-height: 1.2;
  }
- .brand-sub { font-size: .62rem; color: var(--rly-gold); letter-spacing: .1em; text-transform: uppercase; }
- .nav-divider { width: 1px; height: 34px; background: rgba(255,255,255,.2); margin: 0 .5rem; }
- .app-name { font-size: .78rem; font-weight: 600; color: #c8d8f0; letter-spacing: .04em; text-transform: uppercase; }
- .app-sub { font-size: .65rem; color: rgba(255,255,255,.5); }
+ .brand-sub { 
+ font-size: .62rem; 
+ color: var(--rly-gold); 
+ letter-spacing: .1em; 
+ text-transform: uppercase; 
+ }
+ .nav-divider { 
+ width: 1px; 
+ height: 34px; 
+ background: rgba(255,255,255,.2); 
+ margin: 0 .5rem; 
+ }
+ .app-name { 
+ font-size: .78rem; 
+ font-weight: 600; 
+ color: #c8d8f0; 
+ letter-spacing: .04em; 
+ text-transform: uppercase; 
+ }
+ .app-sub { 
+ font-size: .65rem; 
+ color: rgba(255,255,255,.5); 
+ }
+ 
+ .nav-controls {
+ margin-left: auto;
+ display: flex;
+ align-items: center;
+ gap: 1.2rem;
+ }
+ .user-badge {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ background: rgba(255,255,255,0.08);
+ padding: 0.2rem 0.9rem 0.2rem 0.7rem;
+ border-radius: 40px;
+ border-left: 2px solid var(--rly-gold);
+ }
+ .user-badge i {
+ font-size: 0.9rem;
+ color: var(--rly-gold);
+ }
+ .user-badge span {
+ font-size: 0.75rem;
+ font-weight: 500;
+ color: #eef2ff;
+ letter-spacing: 0.02em;
+ }
+ .role-dept {
+ background: var(--rly-gold);
+ color: var(--rly-blue);
+ font-weight: 700;
+ font-size: 0.65rem;
+ padding: 2px 8px;
+ border-radius: 20px;
+ margin-left: 6px;
+ }
+ .logout-nav-btn {
+ background: rgba(255,255,255,0.1);
+ border: 1px solid rgba(255,255,255,0.3);
+ border-radius: 30px;
+ padding: 5px 14px;
+ font-size: 0.75rem;
+ font-weight: 600;
+ color: #fff;
+ display: inline-flex;
+ align-items: center;
+ gap: 7px;
+ text-decoration: none;
+ transition: all 0.2s ease;
+ }
+ .logout-nav-btn i {
+ font-size: 0.8rem;
+ color: var(--rly-gold);
+ }
+ .logout-nav-btn:hover {
+ background: rgba(255,255,255,0.25);
+ border-color: var(--rly-gold);
+ color: white;
+ transform: translateY(-1px);
+ }
  
  .page-wrapper { flex: 1; padding: 1.75rem 1.5rem 5rem; max-width: 1400px; margin: 0 auto; width: 100%; }
  
@@ -259,10 +352,6 @@
  }
  .site-footer p { font-size: .68rem; color: rgba(255,255,255,.65); margin: 0; }
  
- .user-info { margin-left: auto; text-align: right; color: white; }
- .user-info .welcome { font-size: 14px; font-weight: 700; }
- .user-info .empid { font-size: 11px; color: #d4a017; }
- 
  .toast-notification {
  position: fixed;
  top: 20px;
@@ -284,50 +373,70 @@
  margin-bottom: 20px;
  border: 1px solid var(--border);
  }
+ 
+ @media (max-width: 992px) {
+ .top-navbar { 
+ flex-direction: column; 
+ text-align: center; 
+ }
+ .nav-controls { 
+ margin-left: 0; 
+ width: 100%; 
+ justify-content: center; 
+ margin-top: 10px; 
+ }
+ .nav-divider { 
+ display: none; 
+ }
+ .page-wrapper { 
+ padding: 1rem; 
+ }
+ }
  </style>
 </head>
 <body>
 
 <nav class="top-navbar">
- <svg class="ir-logo" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
- <circle cx="22" cy="22" r="20" stroke="#d4a017" stroke-width="2.5" fill="none"/>
- <g stroke="#d4a017" stroke-width="1.6">
- <line x1="22" y1="4" x2="22" y2="40"/>
- <line x1="4" y1="22" x2="40" y2="22"/>
- <line x1="8.7" y1="8.7" x2="35.3" y2="35.3"/>
- <line x1="35.3" y1="8.7" x2="8.7" y2="35.3"/>
- </g>
- <circle cx="22" cy="22" r="5" fill="#d4a017"/>
- <circle cx="22" cy="22" r="2" fill="#003366"/>
- </svg>
+ <!-- Emblem with logo image (same as HOD page) -->
+ <div class="emblem">
+  <img src="{{ url_for('static', filename='images/images.png') }}" 
+       alt="Southern Railway Emblem" 
+       class="logo-img"
+       onerror="this.style.display='none'">
+ </div>
  <div>
- <div class="brand-title">Indian Railways</div>
- <div class="brand-sub">भारतीय रेल</div>
+  <div class="brand-title">Indian Railways</div>
+  <div class="brand-sub">भारतीय रेल</div>
  </div>
  <div class="nav-divider"></div>
  <div>
- <div class="app-name">Division Performance Monitoring System</div>
- <div class="app-sub">Palakkad Division | Southern Railway</div>
+  <div class="app-name">Division Performance Monitoring System</div>
+  <div class="app-sub">Palakkad Division | Southern Railway</div>
  </div>
- <div class="user-info">
-    <div class="welcome">Welcome, {{ session.get('username', 'User') }}</div>
-    <div class="empid">Employee ID : {{ session.get('user_id', 'N/A') }}</div>
+ <div class="nav-controls">
+  <div class="user-badge">
+   <i class="fas fa-user"></i>
+   <span>Department <span class="role-dept">Entry Staff</span></span>
+  </div>
+  <a href="/logout" class="logout-nav-btn" id="deptLogoutBtn">
+   <i class="fas fa-sign-out-alt"></i> Logout
+  </a>
  </div>
 </nav>
 
 <div class="page-wrapper">
  <div class="breadcrumb-bar">
- <nav aria-label="breadcrumb">
- <ol class="breadcrumb">
- <li class="breadcrumb-item"><a href="/"><i class="fas fa-home me-1"></i>Home</a></li>
- <li class="breadcrumb-item active">KPI Entry</li>
- </ol>
- </nav>
+  <nav aria-label="breadcrumb">
+   <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/"><i class="fas fa-home me-1"></i>Home</a></li>
+    <li class="breadcrumb-item active">KPI Entry</li>
+   </ol>
+  </nav>
  </div>
  
  <div class="page-heading mb-3">
- <h4><i class="fas fa-pencil-alt me-2" style="color:var(--rly-gold)"></i>Department KPI Entry</h4>
- <p class="text-muted small">Enter monthly and cumulative performance data for your department KPIs. Fields marked with <span class="text-warning">highlighted border</span> indicate returned KPIs requiring correction.</p>
+  <h4><i class="fas fa-pencil-alt me-2" style="color:var(--rly-gold)"></i>Department KPI Entry</h4>
+  <p class="text-muted small">Enter monthly and cumulative performance data for your department KPIs. Fields marked with <span class="text-warning">highlighted border</span> indicate returned KPIs requiring correction.</p>
  </div>
 
 {% if message %}
@@ -427,7 +536,7 @@
  <div class="table-responsive">
  <table class="kpi-table">
  <thead>
-   <tr>
+    <tr>
     <th style="width: 5%">S.N</th>
     <th style="width: 25%">KPI</th>
     <th style="width: 8%">Unit</th>
@@ -436,7 +545,7 @@
     <th style="width: 13%">Performance For Month</th>
     <th style="width: 13%">Cumulative (YTD)</th>
     <th style="width: 14%">Prev Year Cumulative</th>
-   </tr>
+    </tr>
  </thead>
  <tbody>
  {% set current_section = namespace(value='') %}
@@ -482,7 +591,7 @@
                    class="kpi-input" placeholder="0.00" 
                    {% if kpi.department_id|string != user_department|string %}readonly{% endif %}>
         </td>
-     </tr>
+    </tr>
  {% endfor %}
  </tbody>
  </table>
@@ -553,7 +662,6 @@ window.scrollToKPI = function(kpiId) {
             targetRow.style.backgroundColor = '';
         }, 3000);
         
-        // Highlight the month input field
         const monthInput = targetRow.querySelector('td:nth-child(6) input');
         if (monthInput) {
             monthInput.style.boxShadow = '0 0 0 2px #ffc107';
@@ -588,7 +696,6 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
         .then(data => {
             if (data.success) {
                 showToast(data.message || 'KPI removed successfully', 'success');
-                
                 const itemElement = document.getElementById(`returned-item-${returnId}`);
                 if (itemElement) {
                     itemElement.style.transition = 'opacity 0.3s ease';
@@ -597,7 +704,6 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
                         itemElement.remove();
                         const remainingItems = document.querySelectorAll('.returned-item');
                         const returnedSection = document.getElementById('returnedSection');
-                        
                         if (remainingItems.length === 0 && returnedSection) {
                             returnedSection.style.transition = 'opacity 0.3s ease';
                             returnedSection.style.opacity = '0';
@@ -639,7 +745,6 @@ window.removeReturnedItem = function(returnId, kpiName, buttonElement) {
     }
 };
 
-// Attach event handlers to remove buttons
 function attachRemoveButtonHandlers() {
     const removeButtons = document.querySelectorAll('.btn-remove-return');
     removeButtons.forEach(btn => {
@@ -659,9 +764,19 @@ function attachRemoveButtonHandlers() {
     });
 }
 
-// Form submission with confirmation
+// Form submission with confirmation & logout confirmation
 document.addEventListener('DOMContentLoaded', function() {
     attachRemoveButtonHandlers();
+    
+    // Logout confirmation (like HOD page)
+    const logoutBtn = document.getElementById('deptLogoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to logout?')) {
+                e.preventDefault();
+            }
+        });
+    }
     
     const kpiForm = document.getElementById('kpiForm');
     if (kpiForm) {
@@ -680,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Auto-hide alerts after 5 seconds
+    // Auto-hide alerts
     setTimeout(() => {
         document.querySelectorAll('.alert-success').forEach(alert => {
             const bsAlert = new bootstrap.Alert(alert);
@@ -688,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 1000);
     
-    console.log('Department KPI Entry form loaded - Fixed version');
+    console.log('Department KPI Entry form loaded – Logo & Logout integrated');
 });
 </script>
 </body>
