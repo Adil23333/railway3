@@ -227,6 +227,75 @@
             background: var(--railway-blue-dark);
         }
  
+        /* Document upload status styles */
+        .doc-uploaded {
+            background: #d1e7dd;
+            color: #0a5c36;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+ 
+        .doc-missing {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+ 
+        .btn-view-doc {
+            background: #198754;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.15rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+ 
+        .btn-view-doc:hover {
+            background: #157347;
+            color: white;
+            transform: translateY(-1px);
+        }
+ 
+        .btn-download-doc {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.15rem 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+ 
+        .btn-download-doc:hover {
+            background: #0b5ed7;
+            color: white;
+            transform: translateY(-1px);
+        }
+ 
         /* Performance Indicator Styles - SWAPPED */
         .perf-value-with-indicator {
             display: inline-flex;
@@ -295,7 +364,7 @@
         .kpi-table { 
             width: 100%; 
             border-collapse: collapse; 
-            min-width: 1000px;
+            min-width: 1200px;
         }
         .kpi-table thead tr {
             background: #f0f4fa;
@@ -471,6 +540,15 @@
             background: #991b1b;
         }
  
+        /* Document View Modal */
+        .doc-view-modal .modal-header {
+            background: var(--railway-blue);
+            color: white;
+        }
+        .doc-view-modal .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+ 
         /* footer */
         .ir-footer {
             position: fixed;
@@ -618,7 +696,8 @@
                         <th><i class="fa fa-chart-line me-1" style="opacity:0.55;"></i>Cumulative (YTD)</th>
                         <th><i class="fa fa-chart-simple me-1" style="opacity:0.55;"></i>Performance Status</th>
                         <th><i class="fa fa-history me-1" style="opacity:0.55;"></i>Prev Year Value</th>
-                        <th><i class="fa fa-chart-bar me-1" style="opacity:0.55;"></i>Prev Year Cumulative</th>
+                        <th><i class="fa fa-chart-bar me-1" style="opacity:0.55;"></i>Prev Year Cum</th>
+                        <th><i class="fa fa-file-pdf me-1" style="opacity:0.55;"></i>HOD Document</th>
                         <th><i class="fa fa-circle me-1" style="opacity:0.55;"></i>Status</th>
                         <th><i class="fa fa-cogs me-1" style="opacity:0.55;"></i>Action</th>
                     </tr>
@@ -687,6 +766,13 @@
                         </td>
                         <td><span class="prev-year-val">{{ row.previous_year_value if row.previous_year_value and row.previous_year_value != 'Not Available' else '-' }}</span></td>
                         <td><span class="prev-year-val">{{ row.cumulative_performance_of_prev_year if row.cumulative_performance_of_prev_year and row.cumulative_performance_of_prev_year != 'Not Available' else '-' }}</span></td>
+                        <td class="document-cell" id="docStatus-{{ row.id }}">
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </td>
                         <td class="status-cell">
                             {% if row.status == 'FORWARDED_TO_DRM' %}
                             <span class="badge-status status-FORWARDED_TO_DRM"><i class="fas fa-paper-plane"></i>FORWARDED_TO_DRM</span>
@@ -742,7 +828,7 @@
                     
                     {% if rows|length == 0 %}
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
                             <h6 class="text-muted">No KPI records found</h6>
                             <small class="text-muted">No 'FORWARDED_TO_ADRM' records for {{ selected_month }} {{ selected_year }}</small>
@@ -752,7 +838,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="8" class="text-muted">
+                        <td colspan="9" class="text-muted">
                             <div class="row">
                                 <div class="col-md-6">
                                     <i class="fas fa-info-circle me-1"></i>
@@ -816,6 +902,37 @@
     </div>
 </div>
 
+<!-- Document View Modal -->
+<div class="modal fade doc-view-modal" id="docViewModal" tabindex="-1" aria-labelledby="docViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="docViewModalLabel">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    HOD Signed Document
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="docViewContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading document...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="docDownloadLink" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="ir-footer">
     <div class="footer-left">
@@ -839,6 +956,120 @@
                 return true;
             });
         }
+        
+        // Function to check document status for a KPI
+        function checkDocumentStatus(kpiId) {
+            const statusDiv = document.getElementById(`docStatus-${kpiId}`);
+            if (!statusDiv) return;
+            
+            fetch(`/hod/check_document_status/${kpiId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.uploaded) {
+                        statusDiv.innerHTML = `
+                            <span class="doc-uploaded">
+                                <i class="fas fa-check-circle"></i> Uploaded
+                            </span>
+                            <small class="text-muted" style="font-size: 0.55rem; word-break: break-all; max-width: 120px;">
+                                ${data.filename || 'Document'}
+                            </small>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button onclick="viewDocument(${kpiId})" 
+                                        class="btn btn-success btn-sm" 
+                                        title="View Document">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <a href="/hod/download_signed_document/${kpiId}" 
+                                   class="btn btn-primary btn-sm" 
+                                   title="Download Document">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </div>
+                            ${data.remarks ? `<small class="text-muted" style="font-size: 0.5rem;"><i class="fas fa-comment"></i> ${data.remarks.substring(0, 30)}${data.remarks.length > 30 ? '...' : ''}</small>` : ''}
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `
+                            <span class="doc-missing">
+                                <i class="fas fa-times-circle"></i> Not Uploaded
+                            </span>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking document status:', error);
+                    statusDiv.innerHTML = `
+                        <span class="text-muted" style="font-size: 0.7rem;">
+                            <i class="fas fa-exclamation-triangle"></i> Error
+                        </span>
+                    `;
+                });
+        }
+        
+        // Function to view document in modal
+        window.viewDocument = function(kpiId) {
+            const modal = new bootstrap.Modal(document.getElementById('docViewModal'));
+            const contentDiv = document.getElementById('docViewContent');
+            
+            // Show loading
+            contentDiv.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading document...</p>
+                </div>
+            `;
+            
+            // Set download link
+            document.getElementById('docDownloadLink').href = `/hod/download_signed_document/${kpiId}`;
+            
+            // Try to embed the PDF
+            fetch(`/hod/check_document_status/${kpiId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.uploaded) {
+                        contentDiv.innerHTML = `
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>${data.filename || 'Signed Document'}</strong>
+                                ${data.remarks ? `<br><small><i class="fas fa-comment"></i> ${data.remarks}</small>` : ''}
+                            </div>
+                            <div class="embed-responsive" style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden;">
+                                <iframe src="/hod/view_signed_document/${kpiId}" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 1px solid #ddd; border-radius: 4px;"
+                                        frameborder="0">
+                                </iframe>
+                            </div>
+                        `;
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No signed document has been uploaded for this KPI.
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading document:', error);
+                    contentDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error loading document. Please try again.
+                        </div>
+                    `;
+                });
+            
+            modal.show();
+        };
+        
+        // Check document status for all rows on page load
+        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+            const kpiId = row.getAttribute('data-id');
+            if (kpiId) {
+                checkDocumentStatus(kpiId);
+            }
+        });
         
         // Forward confirmation with warning for green indicators (Needs Improvement)
         const forwardBtns = document.querySelectorAll('.forward-action');

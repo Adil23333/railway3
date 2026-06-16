@@ -211,7 +211,7 @@
  width: 100%; 
  border-collapse: collapse; 
  font-size: .82rem; 
- min-width: 1200px;
+ min-width: 1400px;
  }
  .kpi-table thead th {
  background: #f0f4f9;
@@ -420,6 +420,160 @@
  font-weight: 600; 
  }
  
+ /* Document upload status styles */
+ .doc-uploaded {
+    background: #d1e7dd;
+    color: #0a5c36;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .doc-missing {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .btn-upload-doc {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .btn-upload-doc:hover {
+    background: #0b5ed7;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
+ .btn-view-doc {
+    background: #198754;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .btn-view-doc:hover {
+    background: #157347;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
+ .btn-delete-doc {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .btn-delete-doc:hover {
+    background: #bb2d3b;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
+ .btn-bulk-upload {
+    background: #6f42c1;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.3rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+ }
+ 
+ .btn-bulk-upload:hover {
+    background: #5a32a3;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
+ .btn-download-template {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+ }
+ 
+ .btn-download-template:hover {
+    background: #138496;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
+ .btn-download-bulk {
+    background: #fd7e14;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.3rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+ }
+ 
+ .btn-download-bulk:hover {
+    background: #e06b0a;
+    color: white;
+    transform: translateY(-1px);
+ }
+ 
  @media (max-width: 992px) {
  .top-navbar { 
  flex-direction: column; 
@@ -521,7 +675,7 @@
  <div class="page-heading d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
   <div>
    <h4><i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>Submitted KPIs – Pending Review</h4>
-   <p>Review department submissions, compare with previous year data, and approve or return for revisions</p>
+   <p>Review department submissions, upload signed documents, and approve or return for revisions</p>
   </div>
  </div>
 
@@ -573,25 +727,34 @@
         <i class="fas fa-table me-2" style="color:var(--rly-gold);"></i>
         <h6 class="d-inline-block mb-0">KPI Performance Records</h6>
     </div>
-    <button id="approveSelectedBtn" class="btn-approve-bulk">
-        <i class="fas fa-check-double"></i> Approve Selected
-    </button>
+    <div class="d-flex gap-2 flex-wrap">
+        <button id="downloadBulkTemplateBtn" class="btn-download-bulk">
+            <i class="fas fa-file-pdf"></i> Download Bulk Template
+        </button>
+        <button id="bulkUploadBtn" class="btn-bulk-upload">
+            <i class="fas fa-file-pdf"></i> Bulk Upload PDF
+        </button>
+        <button id="approveSelectedBtn" class="btn-approve-bulk">
+            <i class="fas fa-check-double"></i> Approve Selected
+        </button>
+    </div>
   </div>
  
   <div class="table-responsive">
    <table class="kpi-table">
     <thead>
      <tr>
-       <th width="5%"><input type="checkbox" id="selectAll"></th>
-       <th width="5%">#</th>
-       <th width="22%">KPI Name</th>
-       <th width="10%">Monthly Value</th>
-       <th width="10%">Previous Year (Full)</th>
-       <th width="15%">Cumulative (YTD)</th>
-       <th width="10%">Prev Year Cumulative</th>
-       <th width="10%">Submitted On</th>
+       <th width="4%"><input type="checkbox" id="selectAll"></th>
+       <th width="4%">#</th>
+       <th width="16%">KPI Name</th>
+       <th width="8%">Monthly Value</th>
+       <th width="8%">Previous Year</th>
+       <th width="12%">Cumulative (YTD)</th>
+       <th width="8%">Prev Year Cum</th>
+       <th width="8%">Submitted On</th>
+       <th width="10%">Signed Document</th>
        <th width="8%">Status</th>
-       <th width="8%">Action</th>
+       <th width="12%">Action</th>
       </tr>
     </thead>
     <tbody>
@@ -683,6 +846,11 @@
          <span class="text-muted">-</span>
         {% endif %}
         </td>
+       <td class="text-center" id="docStatus-{{ row.id }}">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+         <span class="visually-hidden">Loading...</span>
+        </div>
+       </td>
        <td class="text-center status-cell">
         <span class="badge-status badge-submitted">
          <i class="fas fa-clock"></i> {{ row.status }}
@@ -690,9 +858,19 @@
         </td>
        <td class="text-center action-cell">
         {% if row.status == 'SUBMITTED' %}
-         <a href="/return/{{ row.id }}" class="btn-return btn-sm">
-          <i class="fas fa-undo-alt"></i> Return
-         </a>
+         <div class="d-flex flex-column gap-1">
+          <div class="btn-group btn-group-sm" role="group">
+           <a href="/hod/download_template/{{ row.id }}" class="btn-download-template btn-sm" title="Download Template">
+            <i class="fas fa-file-pdf"></i> Template
+           </a>
+           <button class="btn-upload-doc btn-sm" onclick="openUploadModal({{ row.id }}, '{{ row.kpi_name|replace("'", "\\'") }}', '{{ selected_month }} {{ selected_year }}')">
+            <i class="fas fa-upload"></i> Upload
+           </button>
+          </div>
+          <a href="/return/{{ row.id }}" class="btn-return btn-sm">
+           <i class="fas fa-undo-alt"></i> Return
+          </a>
+         </div>
         {% else %}
          <button class="btn-return btn-sm" disabled style="opacity:0.5;">
           <i class="fas fa-ban"></i> Return
@@ -702,7 +880,7 @@
        </tr>
      {% else %}
       <tr>
-       <td colspan="10" class="text-center py-5">
+       <td colspan="11" class="text-center py-5">
         <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
         <h6 class="text-muted">No KPI submissions found</h6>
         <small class="text-muted">No records with 'SUBMITTED' status for {{ selected_month }} {{ selected_year }}</small>
@@ -712,7 +890,7 @@
     </tbody>
     <tfoot>
       <tr>
-       <td colspan="10" class="text-muted">
+       <td colspan="11" class="text-muted">
         <div class="row g-3">
          <div class="col-md-6">
           <i class="fas fa-info-circle me-1"></i>
@@ -745,6 +923,140 @@
  </div>
 </div>
 
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocModal" tabindex="-1" aria-labelledby="uploadDocModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--rly-blue); color: white;">
+                <h5 class="modal-title" id="uploadDocModalLabel">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    Upload Signed Approval Document
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="uploadDocForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> You must upload a signed PDF document for each KPI before approving it.
+                        This serves as your official approval signature and will be visible to all higher authorities.
+                    </div>
+                    
+                    <input type="hidden" id="docKpiId" name="monthly_data_id">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-tag me-1"></i> KPI Name
+                            </label>
+                            <input type="text" class="form-control" id="docKpiName" readonly style="background: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-day me-1"></i> Month/Year
+                            </label>
+                            <input type="text" class="form-control" id="docMonthYear" readonly style="background: #f8f9fa;">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-upload me-1"></i> Select Signed PDF File
+                        </label>
+                        <input type="file" class="form-control" id="pdfFile" name="pdf_file" accept=".pdf" required>
+                        <small class="text-muted">Only PDF files are allowed. Maximum size: 10MB.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-comment me-1"></i> Remarks (Optional)
+                        </label>
+                        <textarea class="form-control" id="docRemarks" name="remarks" rows="3" 
+                                  placeholder="Add any additional remarks about this approval..."></textarea>
+                    </div>
+                    
+                    <div id="uploadStatus" style="display: none;" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="uploadDocBtn">
+                        <i class="fas fa-upload"></i> Upload Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Upload Modal -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--rly-blue); color: white;">
+                <h5 class="modal-title" id="bulkUploadModalLabel">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    Bulk Upload Signed Approval Documents
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="bulkUploadForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Upload a single PDF file containing all approved KPIs with signatures.
+                        The PDF should contain all the KPI approvals for the selected month/year.
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-alt me-1"></i> Month
+                            </label>
+                            <input type="text" class="form-control" id="bulkMonth" readonly value="{{ selected_month }}" style="background: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-week me-1"></i> Year
+                            </label>
+                            <input type="text" class="form-control" id="bulkYear" readonly value="{{ selected_year }}" style="background: #f8f9fa;">
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> Uploading a bulk PDF will mark ALL SELECTED KPIs as having an uploaded document.
+                        The same PDF will be associated with all selected KPIs.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-upload me-1"></i> Select Signed PDF File (Bulk)
+                        </label>
+                        <input type="file" class="form-control" id="bulkPdfFile" name="pdf_file" accept=".pdf" required>
+                        <small class="text-muted">Only PDF files are allowed. Maximum size: 10MB.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-comment me-1"></i> Bulk Remarks (Optional)
+                        </label>
+                        <textarea class="form-control" id="bulkRemarks" name="remarks" rows="3" 
+                                  placeholder="Add any additional remarks about this bulk approval..."></textarea>
+                    </div>
+                    
+                    <div id="bulkUploadStatus" style="display: none;" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="bulkUploadBtn">
+                        <i class="fas fa-upload"></i> Upload Bulk Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <footer class="site-footer">
  <p><i class="fas fa-train me-1"></i>Palakkad Division | Southern Railway | Government of India</p>
  <p class="gov"><i class="fas fa-shield-alt me-1"></i>Official Government Portal</p>
@@ -752,131 +1064,483 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
-(function() {
-   // Logout confirmation
-   const logoutBtn = document.getElementById('hodLogoutBtn');
-   if (logoutBtn) {
-     logoutBtn.addEventListener('click', function(e) {
-       if (!confirm('Are you sure you want to logout?')) {
-         e.preventDefault();
-       }
-     });
-   }
-   
-   // Select All functionality
-   const selectAllCheckbox = document.getElementById("selectAll");
-   if (selectAllCheckbox) {
-     selectAllCheckbox.addEventListener("change", function() {
-       const checkboxes = document.querySelectorAll(".kpi-checkbox");
-       checkboxes.forEach(cb => {
-         cb.checked = this.checked;
-       });
-     });
-   }
-   
-   // Return button confirmation with indicator info (SWAPPED)
-   const returnBtns = document.querySelectorAll('.btn-return:not([disabled])');
-   returnBtns.forEach(btn => {
-     btn.addEventListener('click', function(e) {
-       const row = this.closest('tr');
-       const kpiName = row?.querySelector('.kpi-name-cell strong')?.innerText || 'this KPI';
-       const cumulativeSpan = row?.querySelector('.cumulative-cell .perf-value');
-       const hasGreen = cumulativeSpan?.querySelector('.text-success') !== null;
-       const hasRed = cumulativeSpan?.querySelector('.text-danger') !== null;
-       const statusText = hasRed ? '🔴 RED - Needs Improvement' : (hasGreen ? '🟢 GREEN - On Track' : 'ℹ️ Info Only');
-       
-       const remarks = prompt(
-         `📋 Return KPI: "${kpiName}"\n\nCurrent Status: ${statusText}\n\nPlease provide detailed remarks/reason for return:`, 
-         'Needs revision or clarification'
-       );
-       
-       if (remarks === null) {
-         e.preventDefault();
-         return false;
-       }
-       
-       if (remarks.trim() === '') {
-         alert('⚠️ Please provide remarks before returning the KPI.');
-         e.preventDefault();
-         return false;
-       }
-       
-       const originalHref = this.getAttribute('href');
-       const encodedRemarks = encodeURIComponent(remarks.trim());
-       const separator = originalHref.includes('?') ? '&' : '?';
-       this.setAttribute('href', originalHref + separator + 'remarks=' + encodedRemarks);
-       return true;
-     });
-   });
-   
-   // Bulk approve with warning for green indicators (Needs Improvement)
-   const bulkApproveBtn = document.getElementById("approveSelectedBtn");
-   if (bulkApproveBtn) {
-     bulkApproveBtn.addEventListener("click", function() {
-       const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
-       const ids = Array.from(checkedBoxes).map(cb => cb.value);
-       
-       if (ids.length === 0) {
-         alert("⚠️ Please select at least one KPI to approve.");
-         return;
-       }
-       
-       // Check if any selected KPI has green indicator (Needs Improvement)
-       const greenIndicators = Array.from(checkedBoxes).filter(cb => cb.getAttribute('data-indicator') === 'success');
-       
-       let confirmMessage = `✅ Approve ${ids.length} selected KPI(s)?\n\nApproved records will be forwarded to the Nodal Officer.`;
-       
-       if (greenIndicators.length > 0) {
-         confirmMessage = `⚠️⚠️⚠️ WARNING: ${greenIndicators.length} selected KPI(s) show "Needs Improvement" (Green indicator).\n\n${confirmMessage}\n\nDo you still want to approve these items?`;
-       }
-       
-       if (!confirm(confirmMessage)) {
-         return;
-       }
-       
-       // Show loading state
-       bulkApproveBtn.disabled = true;
-       bulkApproveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
-       
-       fetch("/approve_bulk", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ ids: ids })
-       })
-       .then(response => response.json())
-       .then(data => {
-         alert(data.message || "✅ Bulk approval completed successfully.");
-         location.reload();
-       })
-       .catch(error => {
-         console.error("Error:", error);
-         alert("❌ Error in bulk approval. Please try again.");
-         bulkApproveBtn.disabled = false;
-         bulkApproveBtn.innerHTML = '<i class="fas fa-check-double"></i> Approve Selected';
-       });
-     });
-   }
-   
-   // Add animation to indicators on page load
-   const indicators = document.querySelectorAll('.performance-indicator');
-   console.log(`✅ Found ${indicators.length} performance indicators on page load (SWAPPED: Red=Needs Improvement, Green=On Track)`);
-   indicators.forEach(indicator => {
-     indicator.style.animation = 'indicatorPop 0.3s ease';
-     setTimeout(() => {
-       if (indicator) indicator.style.animation = '';
-     }, 300);
-   });
-   
-   // Toggle select all when individual checkboxes change
-   document.querySelectorAll('.kpi-checkbox').forEach(cb => {
-     cb.addEventListener('change', function() {
-       const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
-       if (selectAllCheckbox) {
-         selectAllCheckbox.checked = allChecked;
-       }
-     });
-   });
-})();
+// Single document upload functionality
+function openUploadModal(kpiId, kpiName, monthYear) {
+    document.getElementById('docKpiId').value = kpiId;
+    document.getElementById('docKpiName').value = kpiName;
+    document.getElementById('docMonthYear').value = monthYear;
+    document.getElementById('docRemarks').value = '';
+    document.getElementById('pdfFile').value = '';
+    document.getElementById('uploadStatus').style.display = 'none';
+    
+    // Check if document already exists
+    fetch(`/hod/check_document_status/${kpiId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.uploaded) {
+                document.getElementById('uploadStatus').style.display = 'block';
+                document.getElementById('uploadStatus').innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        A document is already uploaded: <strong>${data.filename}</strong>
+                        <br><small>Remarks: ${data.remarks || 'None'}</small>
+                        <br>
+                        <button type="button" class="btn btn-warning btn-sm mt-2" onclick="deleteDocument(${kpiId})">
+                            <i class="fas fa-trash"></i> Delete and Re-upload
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => console.error('Error checking document:', error));
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('uploadDocModal'));
+    modal.show();
+}
+
+function deleteDocument(kpiId) {
+    if (!confirm('Are you sure you want to delete the uploaded document?')) {
+        return;
+    }
+    
+    fetch(`/hod/delete_signed_document/${kpiId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('uploadStatus').style.display = 'block';
+            document.getElementById('uploadStatus').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> ${data.message}
+                </div>
+            `;
+            document.getElementById('pdfFile').value = '';
+            // Refresh document status in table
+            checkDocumentStatus(kpiId);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting document. Please try again.');
+    });
+}
+
+// Handle single document upload form submission
+document.getElementById('uploadDocForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const uploadBtn = document.getElementById('uploadDocBtn');
+    const statusDiv = document.getElementById('uploadStatus');
+    const kpiId = document.getElementById('docKpiId').value;
+    
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Uploading document...</div>';
+    
+    fetch(`/hod/upload_signed_document/${kpiId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> ${data.message}
+                </div>
+            `;
+            // Update document status in table
+            checkDocumentStatus(parseInt(kpiId));
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadDocModal'));
+                modal.hide();
+                location.reload(); // Refresh to update the table
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> ${data.message}
+                </div>
+            `;
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> Error uploading document. Please try again.
+            </div>
+        `;
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
+    });
+});
+
+// Handle bulk upload form submission - FIXED: Uses selected KPIs only
+document.getElementById('bulkUploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const uploadBtn = document.getElementById('bulkUploadBtn');
+    const statusDiv = document.getElementById('bulkUploadStatus');
+    
+    // Get ONLY SELECTED KPI IDs
+    const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
+    const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Please select at least one KPI for bulk upload.
+            </div>
+        `;
+        return;
+    }
+    
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    statusDiv.style.display = 'block';
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Uploading bulk document for ' + selectedIds.length + ' KPI(s)...</div>';
+    
+    // Add the list of SELECTED KPI IDs to the form data
+    formData.append('kpi_ids', JSON.stringify(selectedIds));
+    
+    fetch('/hod/bulk_upload_signed_document', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> ${data.message}
+                </div>
+            `;
+            
+            // Update document status for all selected KPIs
+            selectedIds.forEach(id => {
+                checkDocumentStatus(parseInt(id));
+            });
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('bulkUploadModal'));
+                modal.hide();
+                location.reload(); // Refresh to update the table
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> ${data.message}
+                </div>
+            `;
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Bulk Document';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> Error uploading bulk document. Please try again.
+            </div>
+        `;
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Bulk Document';
+    });
+});
+
+// Open bulk upload modal - FIXED: Shows selected count
+document.getElementById('bulkUploadBtn').addEventListener('click', function() {
+    const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
+    const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert("⚠️ Please select at least one KPI for bulk upload.");
+        return;
+    }
+    
+    document.getElementById('bulkPdfFile').value = '';
+    document.getElementById('bulkRemarks').value = '';
+    document.getElementById('bulkUploadStatus').style.display = 'block';
+    document.getElementById('bulkUploadStatus').innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> 
+            You have selected <strong>${selectedIds.length}</strong> KPI(s) for bulk upload.
+            <br>The uploaded PDF will be associated with all selected KPIs.
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('bulkUploadModal'));
+    modal.show();
+});
+
+// Download bulk template
+document.getElementById('downloadBulkTemplateBtn').addEventListener('click', function() {
+    const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (ids.length === 0) {
+        alert("⚠️ Please select at least one KPI to download the bulk template.");
+        return;
+    }
+    
+    // Show loading
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    
+    fetch("/hod/bulk_download_template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: ids })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'HOD_Bulk_Approval_Template.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-file-pdf"></i> Download Bulk Template';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error generating template. Please try again.\n' + (error.message || ''));
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-file-pdf"></i> Download Bulk Template';
+    });
+});
+
+// Function to check document status for a KPI
+function checkDocumentStatus(kpiId) {
+    const statusDiv = document.getElementById(`docStatus-${kpiId}`);
+    if (!statusDiv) return;
+    
+    fetch(`/hod/check_document_status/${kpiId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.uploaded) {
+                statusDiv.innerHTML = `
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <span class="doc-uploaded">
+                            <i class="fas fa-check-circle"></i> Uploaded
+                        </span>
+                        <small class="text-muted" style="font-size: 0.6rem; word-break: break-all; max-width: 120px;">
+                            ${data.filename}
+                        </small>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="/hod/view_signed_document/${kpiId}" 
+                               target="_blank" 
+                               class="btn btn-success btn-sm" 
+                               title="View Document">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/hod/download_signed_document/${kpiId}" 
+                               class="btn btn-primary btn-sm" 
+                               title="Download Document">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                        ${data.remarks ? `<small class="text-muted" style="font-size: 0.55rem;"><i class="fas fa-comment"></i> ${data.remarks.substring(0, 30)}${data.remarks.length > 30 ? '...' : ''}</small>` : ''}
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <span class="doc-missing">
+                        <i class="fas fa-times-circle"></i> Not Uploaded
+                    </span>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error checking document status:', error);
+            statusDiv.innerHTML = `
+                <span class="text-muted" style="font-size: 0.7rem;">
+                    <i class="fas fa-exclamation-triangle"></i> Error
+                </span>
+            `;
+        });
+}
+
+// Check document status for all rows on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.kpi-checkbox').forEach(checkbox => {
+        const kpiId = checkbox.value;
+        checkDocumentStatus(kpiId);
+    });
+});
+
+// Logout confirmation
+const logoutBtn = document.getElementById('hodLogoutBtn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+        if (!confirm('Are you sure you want to logout?')) {
+            e.preventDefault();
+        }
+    });
+}
+
+// Select All functionality
+const selectAllCheckbox = document.getElementById("selectAll");
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener("change", function() {
+        const checkboxes = document.querySelectorAll(".kpi-checkbox");
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+}
+
+// Return button confirmation with indicator info
+const returnBtns = document.querySelectorAll('.btn-return:not([disabled])');
+returnBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        const row = this.closest('tr');
+        const kpiName = row?.querySelector('.kpi-name-cell strong')?.innerText || 'this KPI';
+        const cumulativeSpan = row?.querySelector('.cumulative-cell .perf-value');
+        const hasGreen = cumulativeSpan?.querySelector('.text-success') !== null;
+        const hasRed = cumulativeSpan?.querySelector('.text-danger') !== null;
+        const statusText = hasRed ? '🔴 RED - Needs Improvement' : (hasGreen ? '🟢 GREEN - On Track' : 'ℹ️ Info Only');
+        
+        const remarks = prompt(
+            `📋 Return KPI: "${kpiName}"\n\nCurrent Status: ${statusText}\n\nPlease provide detailed remarks/reason for return:`, 
+            'Needs revision or clarification'
+        );
+        
+        if (remarks === null) {
+            e.preventDefault();
+            return false;
+        }
+        
+        if (remarks.trim() === '') {
+            alert('⚠️ Please provide remarks before returning the KPI.');
+            e.preventDefault();
+            return false;
+        }
+        
+        const originalHref = this.getAttribute('href');
+        const encodedRemarks = encodeURIComponent(remarks.trim());
+        const separator = originalHref.includes('?') ? '&' : '?';
+        this.setAttribute('href', originalHref + separator + 'remarks=' + encodedRemarks);
+        return true;
+    });
+});
+
+// Bulk approve with document check
+const bulkApproveBtn = document.getElementById("approveSelectedBtn");
+if (bulkApproveBtn) {
+    bulkApproveBtn.addEventListener("click", function() {
+        const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
+        const ids = Array.from(checkedBoxes).map(cb => cb.value);
+        
+        if (ids.length === 0) {
+            alert("⚠️ Please select at least one KPI to approve.");
+            return;
+        }
+        
+        // Check if all selected have documents uploaded
+        let hasMissingDoc = false;
+        let missingDocIds = [];
+        let checkedCount = 0;
+        
+        // Check document status for each selected
+        const checkPromises = ids.map(id => {
+            return fetch(`/hod/check_document_status/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    checkedCount++;
+                    if (!data.uploaded) {
+                        hasMissingDoc = true;
+                        missingDocIds.push(id);
+                    }
+                });
+        });
+        
+        Promise.all(checkPromises).then(() => {
+            if (hasMissingDoc) {
+                alert(`⚠️ KPI(s) ${missingDocIds.join(', ')} require uploaded signed PDF document before approval.\n\nPlease upload the signed document first.`);
+                return;
+            }
+            
+            // Check if any selected KPI has red indicator (Needs Improvement)
+            const redIndicators = Array.from(checkedBoxes).filter(cb => cb.getAttribute('data-indicator') === 'danger');
+            
+            let confirmMessage = `✅ Approve ${ids.length} selected KPI(s)?\n\nAll selected KPIs have signed documents uploaded.`;
+            
+            if (redIndicators.length > 0) {
+                confirmMessage = `⚠️⚠️⚠️ WARNING: ${redIndicators.length} selected KPI(s) show "Needs Improvement" (Red indicator).\n\n${confirmMessage}\n\nDo you still want to approve these items?`;
+            }
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Show loading state
+            bulkApproveBtn.disabled = true;
+            bulkApproveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
+            
+            fetch("/approve_bulk", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || "✅ Bulk approval completed successfully.");
+                location.reload();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("❌ Error in bulk approval. Please try again.");
+                bulkApproveBtn.disabled = false;
+                bulkApproveBtn.innerHTML = '<i class="fas fa-check-double"></i> Approve Selected';
+            });
+        });
+    });
+}
+
+// Add animation to indicators on page load
+const indicators = document.querySelectorAll('.performance-indicator');
+indicators.forEach(indicator => {
+    indicator.style.animation = 'indicatorPop 0.3s ease';
+    setTimeout(() => {
+        if (indicator) indicator.style.animation = '';
+    }, 300);
+});
+
+// Toggle select all when individual checkboxes change
+document.querySelectorAll('.kpi-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
+        }
+    });
+});
 </script>
 </body>
 </html>
