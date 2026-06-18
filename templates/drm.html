@@ -308,15 +308,82 @@
         .table-card-header {
             background: var(--railway-blue);
             padding: 0.9rem 1.3rem;
-            display: flex; align-items: center; gap: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .table-card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .table-card-header-title {
             font-family: 'Noto Serif', serif;
             font-size: 0.95rem; font-weight: 600; color: #fff;
         }
         .table-card-header i { color: var(--gold); }
+        
+        /* Bulk Actions */
+        .bulk-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .bulk-actions .form-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bulk-actions .form-check-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+        .bulk-actions .form-check-label {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn-bulk-approve {
+            background: rgba(40, 167, 69, 0.25);
+            color: #fff;
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            border-radius: 5px;
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-bulk-approve:hover:not(:disabled) {
+            background: rgba(40, 167, 69, 0.4);
+            border-color: #28a745;
+            transform: translateY(-1px);
+        }
+        .btn-bulk-approve:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-bulk-approve i { color: #28a745; }
+        
+        .selected-count {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+        .selected-count strong {
+            color: #fff;
+        }
  
-        .kpi-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        .kpi-table { width: 100%; border-collapse: collapse; min-width: 1200px; }
         .kpi-table thead tr {
             background: #f0f4fa;
             border-bottom: 2px solid #c5d1e8;
@@ -347,6 +414,16 @@
         .perf-val {
             font-family: 'Noto Serif', serif;
             font-weight: 600; font-size: 0.9rem;
+        }
+        .checkbox-col {
+            width: 40px;
+            text-align: center;
+        }
+        .checkbox-col input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--railway-blue);
         }
  
         .badge-status {
@@ -419,7 +496,7 @@
         
         .btn-freeze {
             display: inline-flex; align-items: center; gap: 6px;
-            background: #28a745; color: #fff;
+            background: #17a2b8; color: #fff;
             border: none;
             border-radius: 5px;
             padding: 6px 13px;
@@ -431,7 +508,7 @@
             cursor: pointer;
         }
         .btn-freeze:hover {
-            background: #218838;
+            background: #138496;
             transform: translateY(-1px);
         }
         .btn-freeze:disabled {
@@ -480,6 +557,9 @@
             padding: 6px 16px;
             border-radius: 6px;
         }
+        .modal-footer .btn-submit-return:hover {
+            background: #c82333;
+        }
         
         /* Document View Modal */
         .doc-view-modal .modal-header {
@@ -489,6 +569,22 @@
         .doc-view-modal .modal-header .btn-close {
             filter: brightness(0) invert(1);
         }
+        
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: #fff;
+            border-left: 4px solid var(--railway-blue);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast-success { border-left-color: #28a745; }
+        .toast-error { border-left-color: #dc3545; }
+        .toast-warning { border-left-color: #ffc107; }
 
         .ir-footer {
             position: fixed;
@@ -511,6 +607,8 @@
             .filter-bar { flex-direction: column; align-items: stretch; }
             .action-buttons { flex-direction: column; align-items: flex-start; }
             .btn-reject { margin-left: 0; }
+            .table-card-header { flex-direction: column; align-items: stretch; }
+            .bulk-actions { justify-content: center; flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -553,7 +651,7 @@
         <i class="fa fa-tachometer-alt" style="color:var(--gold);margin-right:8px;font-size:1.2rem;"></i>
         DRM Dashboard
     </div>
-    <div class="page-sub">Division Performance Monitoring &mdash; Final Review, Approve/Reject &amp; Month Freeze</div>
+    <div class="page-sub">Division Performance Monitoring &mdash; Final Review &amp; Approval</div>
  
     <div class="filter-bar">
         <div class="filter-group">
@@ -590,14 +688,31 @@
  
     <div class="table-card">
         <div class="table-card-header">
-            <i class="fa fa-table"></i>
-            <span class="table-card-header-title">KPI Performance Register</span>
+            <div class="table-card-header-left">
+                <i class="fa fa-table"></i>
+                <span class="table-card-header-title">KPI Performance Register</span>
+            </div>
+            <!-- Bulk Actions -->
+            <div class="bulk-actions">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                    <label class="form-check-label" for="selectAllCheckbox">
+                        Select All
+                    </label>
+                </div>
+                <button id="bulkApproveBtn" class="btn-bulk-approve" disabled>
+                    <i class="fas fa-check-circle"></i> Approve Selected (<span id="selectedCount">0</span>)
+                </button>
+            </div>
         </div>
  
         <div class="table-responsive">
             <table class="kpi-table">
                 <thead>
                     <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="selectAllHeader" style="width:16px; height:16px; cursor:pointer; accent-color: var(--railway-blue);">
+                        </th>
                         <th>KPI</th>
                         <th>Monthly</th>
                         <th>Cumulative (YTD)</th>
@@ -616,12 +731,15 @@
                     {% set cumulative_val = row.cumulative_val|float if row.cumulative_val else 0 %}
                     {% set expected_ytd = (annual_target / 12) * current_month_num if annual_target > 0 else 0 %}
                     
-                    {# NEW LOGIC: GREEN when Expected YTD ≤ Actual Cumulative (Met or Exceeded Target) #}
+                    {# GREEN when Expected YTD ≤ Actual Cumulative (Met or Exceeded Target) #}
                     {# RED when Expected YTD > Actual Cumulative (Below Target) #}
                     {% set is_green = expected_ytd <= cumulative_val and annual_target > 0 and cumulative_val > 0 %}
                     {% set is_red = expected_ytd > cumulative_val and annual_target > 0 and cumulative_val > 0 %}
                     
                     <tr data-id="{{ row.id }}" data-status="{{ row.status }}" class="{% if is_green %}has-green-indicator{% elif is_red %}has-red-indicator{% endif %}">
+                        <td class="checkbox-col">
+                            <input type="checkbox" class="row-checkbox" data-id="{{ row.id }}" data-kpiname="{{ row.kpi_name }}" style="width:16px; height:16px; cursor:pointer; accent-color: var(--railway-blue);">
+                        </td>
                         <td class="kpi-name">
                             {{ row.kpi_name }}
                             <br><small class="text-muted">Target: {{ row.annual_target or 'N/A' }}</small>
@@ -719,7 +837,7 @@
                     
                     {% if rows|length == 0 %}
                     <tr>
-                        <td colspan="7" class="text-center py-5">
+                        <td colspan="8" class="text-center py-5">
                             <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
                             <h6 class="text-muted">No KPI records found</h6>
                             <small class="text-muted">No 'FORWARDED_TO_DRM' records for {{ selected_month }} {{ selected_year }}</small>
@@ -729,7 +847,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="7" class="text-muted">
+                        <td colspan="8" class="text-muted">
                             <div class="row">
                                 <div class="col-md-6">
                                     <i class="fas fa-info-circle me-1"></i>
@@ -819,6 +937,20 @@
         </div>
     </div>
 </div>
+
+<!-- Toast Container -->
+<div class="toast-container">
+    <div id="toastMessage" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2" id="toastIcon"></i>
+            <strong class="me-auto" id="toastTitle">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+            Message
+        </div>
+    </div>
+</div>
  
 <footer class="ir-footer">
     <div class="footer-left">
@@ -830,6 +962,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     (function() {
+        // ─── LOGOUT CONFIRMATION ───
         const logoutAnchor = document.getElementById('drmLogoutBtn');
         if (logoutAnchor) {
             logoutAnchor.addEventListener('click', function(event) {
@@ -839,7 +972,41 @@
             });
         }
         
-        // Function to check document status for a KPI
+        // ─── TOAST NOTIFICATION ───
+        function showToast(message, type, title) {
+            const toastEl = document.getElementById('toastMessage');
+            const toastBody = document.getElementById('toastBody');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastEl.className = 'toast';
+            if (type === 'success') {
+                toastEl.classList.add('toast-success');
+                toastIcon.className = 'fas fa-check-circle me-2 text-success';
+                toastTitle.textContent = title || 'Success';
+            } else if (type === 'error') {
+                toastEl.classList.add('toast-error');
+                toastIcon.className = 'fas fa-exclamation-circle me-2 text-danger';
+                toastTitle.textContent = title || 'Error';
+            } else if (type === 'warning') {
+                toastEl.classList.add('toast-warning');
+                toastIcon.className = 'fas fa-exclamation-triangle me-2 text-warning';
+                toastTitle.textContent = title || 'Warning';
+            } else {
+                toastIcon.className = 'fas fa-info-circle me-2 text-primary';
+                toastTitle.textContent = title || 'Information';
+            }
+            
+            toastBody.textContent = message;
+            
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 5000,
+                autohide: true
+            });
+            toast.show();
+        }
+        
+        // ─── DOCUMENT STATUS CHECK ───
         function checkDocumentStatus(kpiId) {
             const statusDiv = document.getElementById(`docStatus-${kpiId}`);
             if (!statusDiv) return;
@@ -887,12 +1054,11 @@
                 });
         }
         
-        // Function to view document in modal
+        // ─── VIEW DOCUMENT ───
         window.viewDocument = function(kpiId) {
             const modal = new bootstrap.Modal(document.getElementById('docViewModal'));
             const contentDiv = document.getElementById('docViewContent');
             
-            // Show loading
             contentDiv.innerHTML = `
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -902,10 +1068,8 @@
                 </div>
             `;
             
-            // Set download link
             document.getElementById('docDownloadLink').href = `/hod/download_signed_document/${kpiId}`;
             
-            // Try to embed the PDF
             fetch(`/hod/check_document_status/${kpiId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -945,14 +1109,118 @@
             modal.show();
         };
         
-        // Check document status for all rows on page load
-        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
-            const kpiId = row.getAttribute('data-id');
-            if (kpiId) {
-                checkDocumentStatus(kpiId);
-            }
+        // ─── BULK SELECT FUNCTIONALITY ───
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        const selectAllHeader = document.getElementById('selectAllHeader');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        
+        function updateSelectionState() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const count = checkedBoxes.length;
+            selectedCountSpan.textContent = count;
+            
+            bulkApproveBtn.disabled = count === 0;
+            
+            const visibleCheckboxes = document.querySelectorAll('.row-checkbox');
+            const visibleChecked = document.querySelectorAll('.row-checkbox:checked');
+            const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.length === visibleChecked.length;
+            
+            selectAllHeader.checked = allChecked;
+            selectAllCheckbox.checked = allChecked;
+        }
+        
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectionState);
         });
         
+        selectAllHeader.addEventListener('change', function() {
+            const isChecked = this.checked;
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectionState();
+        });
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectionState();
+        });
+        
+        updateSelectionState();
+        
+        // ─── BULK APPROVE ───
+        bulkApproveBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const selectedIds = [];
+            const selectedNames = [];
+            let hasRedIndicator = false;
+            let redKpiNames = [];
+            
+            checkedBoxes.forEach(cb => {
+                selectedIds.push(cb.getAttribute('data-id'));
+                const name = cb.getAttribute('data-kpiname') || 'KPI';
+                selectedNames.push(name);
+                
+                const row = cb.closest('tr');
+                if (row && row.classList.contains('has-red-indicator')) {
+                    hasRedIndicator = true;
+                    redKpiNames.push(name);
+                }
+            });
+            
+            if (selectedIds.length === 0) {
+                showToast('No KPIs selected for approval.', 'warning', 'No Selection');
+                return;
+            }
+            
+            let warningMsg = '';
+            if (hasRedIndicator) {
+                warningMsg = `\n\n⚠️ WARNING: The following KPIs are "Below Target" (Red indicator):\n${redKpiNames.join('\n')}\n\n`;
+            }
+            
+            const confirmMsg = `Approve ${selectedIds.length} KPI(s)?${warningMsg}\n\nKPIs: ${selectedNames.join(', ')}\n\nThis action will copy data to approved_data table and freeze the records.`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            bulkApproveBtn.disabled = true;
+            bulkApproveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
+            
+            fetch('/drm/bulk_approve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || `${selectedIds.length} KPI(s) approved successfully!`, 'success', 'Approved');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Failed to approve KPIs. Please try again.', 'error', 'Approval Failed');
+                    bulkApproveBtn.disabled = false;
+                    bulkApproveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve Selected (<span id="selectedCount">' + selectedIds.length + '</span>)';
+                }
+            })
+            .catch(error => {
+                console.error('Error approving KPIs:', error);
+                showToast('Network error. Please try again.', 'error', 'Error');
+                bulkApproveBtn.disabled = false;
+                bulkApproveBtn.innerHTML = '<i class="fas fa-check-circle"></i> Approve Selected (<span id="selectedCount">' + selectedIds.length + '</span>)';
+            });
+        });
+        
+        // ─── SINGLE APPROVE CONFIRMATION ───
         const approveButtons = document.querySelectorAll('.approve-action');
         approveButtons.forEach(btn => {
             btn.addEventListener('click', function(e) {
@@ -965,6 +1233,7 @@
             });
         });
         
+        // ─── REJECT MODAL LOGIC ───
         let currentReturnId = null;
         const returnModalElem = document.getElementById('returnApplicationModal');
         let returnModal = null;
@@ -1033,6 +1302,15 @@
             });
         }
         
+        // ─── CHECK DOCUMENT STATUS ───
+        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+            const kpiId = row.getAttribute('data-id');
+            if (kpiId) {
+                checkDocumentStatus(kpiId);
+            }
+        });
+        
+        // ─── ANIMATE INDICATORS ───
         const indicators = document.querySelectorAll('.performance-indicator');
         console.log(`Found ${indicators.length} performance indicators (Green=Target Met, Red=Below Target)`);
         indicators.forEach(indicator => {

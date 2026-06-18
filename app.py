@@ -85,6 +85,227 @@ def get_document_path(monthly_data_id):
         return os.path.basename(files[0])
     return None
 
+@app.route("/nodal/bulk_forward", methods=["POST"])
+def nodal_bulk_forward():
+    """Bulk forward multiple APPROVED KPIs to ADRM"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Login required"}), 401
+    
+    if session["role"] != "LEVEL3":
+        return jsonify({"success": False, "message": "Access Denied"}), 403
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Invalid request data"}), 400
+        
+        ids = data.get("ids", [])
+        if not ids:
+            return jsonify({"success": False, "message": "No KPI IDs provided"}), 400
+        
+        # Convert IDs to integers
+        ids = [int(id_val) for id_val in ids]
+        
+        # Verify all KPIs are in APPROVED status
+        placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
+        params = {}
+        for i, kpi_id in enumerate(ids):
+            params[f'id{i}'] = kpi_id
+        
+        # Check if all selected KPIs are in APPROVED status
+        result = db.session.execute(
+            db.text(f"""
+                SELECT COUNT(*) as count
+                FROM monthly_data
+                WHERE id IN ({placeholders})
+                AND status = 'APPROVED'
+            """),
+            params
+        ).fetchone()
+        
+        if result.count != len(ids):
+            return jsonify({
+                "success": False, 
+                "message": "Some selected KPIs are not in APPROVED status"
+            }), 400
+        
+        # Update all selected KPIs to FORWARDED_TO_ADRM
+        for kpi_id in ids:
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET status = 'FORWARDED_TO_ADRM'
+                    WHERE id = :id AND status = 'APPROVED'
+                """),
+                {"id": kpi_id}
+            )
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"{len(ids)} KPI(s) forwarded to ADRM successfully"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in bulk forward: {str(e)}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+@app.route("/adrm/bulk_forward", methods=["POST"])
+def adrm_bulk_forward():
+    """Bulk forward multiple FORWARDED_TO_ADRM KPIs to DRM"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Login required"}), 401
+    
+    if session["role"] != "LEVEL4":
+        return jsonify({"success": False, "message": "Access Denied"}), 403
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Invalid request data"}), 400
+        
+        ids = data.get("ids", [])
+        if not ids:
+            return jsonify({"success": False, "message": "No KPI IDs provided"}), 400
+        
+        # Convert IDs to integers
+        ids = [int(id_val) for id_val in ids]
+        
+        # Verify all KPIs are in FORWARDED_TO_ADRM status
+        placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
+        params = {}
+        for i, kpi_id in enumerate(ids):
+            params[f'id{i}'] = kpi_id
+        
+        # Check if all selected KPIs are in FORWARDED_TO_ADRM status
+        result = db.session.execute(
+            db.text(f"""
+                SELECT COUNT(*) as count
+                FROM monthly_data
+                WHERE id IN ({placeholders})
+                AND status = 'FORWARDED_TO_ADRM'
+            """),
+            params
+        ).fetchone()
+        
+        if result.count != len(ids):
+            return jsonify({
+                "success": False, 
+                "message": "Some selected KPIs are not in FORWARDED_TO_ADRM status"
+            }), 400
+        
+        # Update all selected KPIs to FORWARDED_TO_DRM
+        for kpi_id in ids:
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET status = 'FORWARDED_TO_DRM'
+                    WHERE id = :id AND status = 'FORWARDED_TO_ADRM'
+                """),
+                {"id": kpi_id}
+            )
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"{len(ids)} KPI(s) forwarded to DRM successfully"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in ADRM bulk forward: {str(e)}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+@app.route("/drm/bulk_approve", methods=["POST"])
+def drm_bulk_approve():
+    """Bulk approve multiple FORWARDED_TO_DRM KPIs"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Login required"}), 401
+    
+    if session["role"] != "LEVEL5":
+        return jsonify({"success": False, "message": "Access Denied"}), 403
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "message": "Invalid request data"}), 400
+        
+        ids = data.get("ids", [])
+        if not ids:
+            return jsonify({"success": False, "message": "No KPI IDs provided"}), 400
+        
+        # Convert IDs to integers
+        ids = [int(id_val) for id_val in ids]
+        
+        # Verify all KPIs are in FORWARDED_TO_DRM status
+        placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
+        params = {}
+        for i, kpi_id in enumerate(ids):
+            params[f'id{i}'] = kpi_id
+        
+        # Check if all selected KPIs are in FORWARDED_TO_DRM status
+        result = db.session.execute(
+            db.text(f"""
+                SELECT COUNT(*) as count
+                FROM monthly_data
+                WHERE id IN ({placeholders})
+                AND status = 'FORWARDED_TO_DRM'
+            """),
+            params
+        ).fetchone()
+        
+        if result.count != len(ids):
+            return jsonify({
+                "success": False, 
+                "message": "Some selected KPIs are not in FORWARDED_TO_DRM status"
+            }), 400
+        
+        # Approve each KPI (copy to approved_data and freeze)
+        approved_count = 0
+        failed_ids = []
+        for kpi_id in ids:
+            try:
+                # Copy to approved_data
+                copy_to_approved_table(kpi_id)
+                
+                # Update status to FROZEN
+                db.session.execute(
+                    db.text("""
+                        UPDATE monthly_data
+                        SET status = 'FROZEN'
+                        WHERE id = :id AND status = 'FORWARDED_TO_DRM'
+                    """),
+                    {"id": kpi_id}
+                )
+                approved_count += 1
+            except Exception as e:
+                print(f"Error approving KPI {kpi_id}: {str(e)}")
+                failed_ids.append(str(kpi_id))
+        
+        db.session.commit()
+        
+        if failed_ids:
+            return jsonify({
+                "success": True,
+                "message": f"{approved_count} KPI(s) approved successfully. Failed: {', '.join(failed_ids)}"
+            })
+        else:
+            return jsonify({
+                "success": True,
+                "message": f"{approved_count} KPI(s) approved and frozen successfully"
+            })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in DRM bulk approve: {str(e)}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+# REMOVED: drm_bulk_reject route
+# REMOVED: drm_bulk_freeze route
+    
 def get_document_info(monthly_data_id):
     """Get document info for a given KPI ID"""
     doc_path = get_document_path(monthly_data_id)

@@ -352,6 +352,13 @@
             padding: 0.9rem 1.3rem;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .table-card-header-left {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
         .table-card-header-title {
@@ -360,11 +367,70 @@
         }
         .table-card-header i { color: var(--gold); }
  
+        /* ── BULK ACTIONS ── */
+        .bulk-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .bulk-actions .form-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bulk-actions .form-check-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+        .bulk-actions .form-check-label {
+            color: rgba(255,255,255,0.85);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .btn-bulk-forward {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 5px;
+            padding: 0.35rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-bulk-forward:hover:not(:disabled) {
+            background: rgba(255,255,255,0.25);
+            border-color: var(--gold);
+            transform: translateY(-1px);
+        }
+        .btn-bulk-forward:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-bulk-forward i {
+            color: var(--gold);
+        }
+        .selected-count {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+        .selected-count strong {
+            color: #fff;
+        }
+ 
         /* ── TABLE ── */
         .kpi-table { 
             width: 100%; 
             border-collapse: collapse; 
-            min-width: 1200px;
+            min-width: 1300px;
         }
         .kpi-table thead tr {
             background: #f0f4fa;
@@ -405,6 +471,16 @@
             font-family: 'Noto Serif', serif;
             font-size: 0.85rem;
             color: #6c757d;
+        }
+        .checkbox-col {
+            width: 40px;
+            text-align: center;
+        }
+        .checkbox-col input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--railway-blue);
         }
  
         /* ── STATUS BADGES ── */
@@ -549,6 +625,22 @@
             filter: brightness(0) invert(1);
         }
  
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .toast {
+            background: #fff;
+            border-left: 4px solid var(--railway-blue);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toast-success { border-left-color: #198754; }
+        .toast-error { border-left-color: #dc3545; }
+        .toast-warning { border-left-color: #ffc107; }
+ 
         /* footer */
         .ir-footer {
             position: fixed;
@@ -599,6 +691,13 @@
             }
             .filter-group {
                 justify-content: space-between;
+            }
+            .table-card-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .bulk-actions {
+                justify-content: center;
             }
         }
     </style>
@@ -683,14 +782,31 @@
  
     <div class="table-card">
         <div class="table-card-header">
-            <i class="fa fa-table"></i>
-            <span class="table-card-header-title">KPI Performance Register</span>
+            <div class="table-card-header-left">
+                <i class="fa fa-table"></i>
+                <span class="table-card-header-title">KPI Performance Register</span>
+            </div>
+            <!-- Bulk Actions -->
+            <div class="bulk-actions">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                    <label class="form-check-label" for="selectAllCheckbox">
+                        Select All
+                    </label>
+                </div>
+                <button id="bulkForwardBtn" class="btn-bulk-forward" disabled>
+                    <i class="fas fa-share-square"></i> Forward Selected (<span id="selectedCount">0</span>)
+                </button>
+            </div>
         </div>
  
         <div class="table-responsive">
             <table class="kpi-table">
                 <thead>
                     <tr>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="selectAllHeader" style="width:16px; height:16px; cursor:pointer; accent-color: var(--railway-blue);">
+                        </th>
                         <th><i class="fa fa-tag me-1" style="opacity:0.55;"></i>KPI</th>
                         <th><i class="fa fa-chart-line me-1" style="opacity:0.55;"></i>Monthly Performance</th>
                         <th><i class="fa fa-chart-line me-1" style="opacity:0.55;"></i>Cumulative (YTD)</th>
@@ -716,6 +832,9 @@
                     {% set is_green = expected_ytd <= cumulative_val and annual_target > 0 and cumulative_val > 0 %}
                     
                     <tr data-id="{{ row.id }}" data-status="{{ row.status }}" class="{% if is_red %}has-red-indicator{% elif is_green %}has-green-indicator{% endif %}">
+                        <td class="checkbox-col">
+                            <input type="checkbox" class="row-checkbox" data-id="{{ row.id }}" data-kpiname="{{ row.kpi_name }}" style="width:16px; height:16px; cursor:pointer; accent-color: var(--railway-blue);">
+                        </td>
                         <td class="kpi-name">
                             {{ row.kpi_name }}
                             <br><small class="text-muted">Target: {{ row.annual_target or 'N/A' }}</small>
@@ -828,7 +947,7 @@
                     
                     {% if rows|length == 0 %}
                     <tr>
-                        <td colspan="9" class="text-center py-5">
+                        <td colspan="10" class="text-center py-5">
                             <i class="fas fa-inbox fa-3x mb-3 d-block" style="color:#cdd8e3;"></i>
                             <h6 class="text-muted">No KPI records found</h6>
                             <small class="text-muted">No 'FORWARDED_TO_ADRM' records for {{ selected_month }} {{ selected_year }}</small>
@@ -838,7 +957,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="9" class="text-muted">
+                        <td colspan="10" class="text-muted">
                             <div class="row">
                                 <div class="col-md-6">
                                     <i class="fas fa-info-circle me-1"></i>
@@ -933,6 +1052,20 @@
     </div>
 </div>
 
+<!-- Toast Container -->
+<div class="toast-container">
+    <div id="toastMessage" class="toast" role="alert" aria-live="polite" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2" id="toastIcon"></i>
+            <strong class="me-auto" id="toastTitle">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+            Message
+        </div>
+    </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="ir-footer">
     <div class="footer-left">
@@ -957,7 +1090,42 @@
             });
         }
         
-        // Function to check document status for a KPI
+        // ─── TOAST NOTIFICATION ───
+        function showToast(message, type, title) {
+            const toastEl = document.getElementById('toastMessage');
+            const toastBody = document.getElementById('toastBody');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            // Reset classes
+            toastEl.className = 'toast';
+            if (type === 'success') {
+                toastEl.classList.add('toast-success');
+                toastIcon.className = 'fas fa-check-circle me-2 text-success';
+                toastTitle.textContent = title || 'Success';
+            } else if (type === 'error') {
+                toastEl.classList.add('toast-error');
+                toastIcon.className = 'fas fa-exclamation-circle me-2 text-danger';
+                toastTitle.textContent = title || 'Error';
+            } else if (type === 'warning') {
+                toastEl.classList.add('toast-warning');
+                toastIcon.className = 'fas fa-exclamation-triangle me-2 text-warning';
+                toastTitle.textContent = title || 'Warning';
+            } else {
+                toastIcon.className = 'fas fa-info-circle me-2 text-primary';
+                toastTitle.textContent = title || 'Information';
+            }
+            
+            toastBody.textContent = message;
+            
+            const toast = new bootstrap.Toast(toastEl, {
+                delay: 5000,
+                autohide: true
+            });
+            toast.show();
+        }
+        
+        // ─── DOCUMENT STATUS CHECK ───
         function checkDocumentStatus(kpiId) {
             const statusDiv = document.getElementById(`docStatus-${kpiId}`);
             if (!statusDiv) return;
@@ -1005,12 +1173,11 @@
                 });
         }
         
-        // Function to view document in modal
+        // ─── VIEW DOCUMENT IN MODAL ───
         window.viewDocument = function(kpiId) {
             const modal = new bootstrap.Modal(document.getElementById('docViewModal'));
             const contentDiv = document.getElementById('docViewContent');
             
-            // Show loading
             contentDiv.innerHTML = `
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -1020,10 +1187,8 @@
                 </div>
             `;
             
-            // Set download link
             document.getElementById('docDownloadLink').href = `/hod/download_signed_document/${kpiId}`;
             
-            // Try to embed the PDF
             fetch(`/hod/check_document_status/${kpiId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -1063,22 +1228,125 @@
             modal.show();
         };
         
-        // Check document status for all rows on page load
-        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
-            const kpiId = row.getAttribute('data-id');
-            if (kpiId) {
-                checkDocumentStatus(kpiId);
-            }
+        // ─── BULK SELECT / FORWARD FUNCTIONALITY ───
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        const selectAllHeader = document.getElementById('selectAllHeader');
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const bulkForwardBtn = document.getElementById('bulkForwardBtn');
+        const selectedCountSpan = document.getElementById('selectedCount');
+        
+        function updateSelectionState() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const count = checkedBoxes.length;
+            selectedCountSpan.textContent = count;
+            
+            bulkForwardBtn.disabled = count === 0;
+            
+            const visibleCheckboxes = document.querySelectorAll('.row-checkbox');
+            const visibleChecked = document.querySelectorAll('.row-checkbox:checked');
+            const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.length === visibleChecked.length;
+            
+            selectAllHeader.checked = allChecked;
+            selectAllCheckbox.checked = allChecked;
+        }
+        
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectionState);
         });
         
-        // Forward confirmation with warning for green indicators (Needs Improvement)
+        selectAllHeader.addEventListener('change', function() {
+            const isChecked = this.checked;
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectionState();
+        });
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            rowCheckboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateSelectionState();
+        });
+        
+        updateSelectionState();
+        
+        // ─── BULK FORWARD TO DRM ───
+        bulkForwardBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const selectedIds = [];
+            const selectedNames = [];
+            let hasRedIndicator = false;
+            let redKpiNames = [];
+            
+            checkedBoxes.forEach(cb => {
+                selectedIds.push(cb.getAttribute('data-id'));
+                const name = cb.getAttribute('data-kpiname') || 'KPI';
+                selectedNames.push(name);
+                
+                const row = cb.closest('tr');
+                if (row && row.classList.contains('has-red-indicator')) {
+                    hasRedIndicator = true;
+                    redKpiNames.push(name);
+                }
+            });
+            
+            if (selectedIds.length === 0) {
+                showToast('No KPIs selected for forwarding.', 'warning', 'No Selection');
+                return;
+            }
+            
+            let warningMsg = '';
+            if (hasRedIndicator) {
+                warningMsg = `\n\n⚠️ WARNING: The following KPIs show "Needs Improvement" (Red indicator):\n${redKpiNames.join('\n')}\n\n`;
+            }
+            
+            const confirmMsg = `Forward ${selectedIds.length} KPI(s) to DRM?${warningMsg}\n\nKPIs: ${selectedNames.join(', ')}\n\nOnce forwarded, the status will be updated to FORWARDED_TO_DRM.`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            bulkForwardBtn.disabled = true;
+            bulkForwardBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Forwarding...';
+            
+            fetch('/adrm/bulk_forward', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || `${selectedIds.length} KPI(s) forwarded to DRM successfully!`, 'success', 'Forwarded');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Failed to forward KPIs. Please try again.', 'error', 'Forward Failed');
+                    bulkForwardBtn.disabled = false;
+                    bulkForwardBtn.innerHTML = '<i class="fas fa-share-square"></i> Forward Selected (<span id="selectedCount">' + selectedIds.length + '</span>)';
+                }
+            })
+            .catch(error => {
+                console.error('Error forwarding KPIs:', error);
+                showToast('Network error. Please try again.', 'error', 'Error');
+                bulkForwardBtn.disabled = false;
+                bulkForwardBtn.innerHTML = '<i class="fas fa-share-square"></i> Forward Selected (<span id="selectedCount">' + selectedIds.length + '</span>)';
+            });
+        });
+        
+        // ─── SINGLE FORWARD CONFIRMATION ───
         const forwardBtns = document.querySelectorAll('.forward-action');
         forwardBtns.forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const kpiName = this.getAttribute('data-kpiname') || 
                                (this.closest('tr')?.querySelector('.kpi-name')?.innerText.split('\n')[0] || 'this KPI');
                 const hasGreenIndicator = this.getAttribute('data-has-green') === 'true';
-                const warningMsg = hasGreenIndicator ? '\n\n⚠️ WARNING: This KPI shows "Needs Improvement" (Green indicator).' : '';
+                const warningMsg = hasGreenIndicator ? '\n\n⚠️ WARNING: This KPI shows "Needs Improvement" (Red indicator).' : '';
                 
                 const confirmForward = confirm(`Forward "${kpiName}" to DRM?${warningMsg}\n\nStatus will be updated to FORWARDED_TO_DRM and DRM will be able to review.`);
                 if (!confirmForward) {
@@ -1087,7 +1355,7 @@
             });
         });
         
-        // Global variables for modal
+        // ─── RETURN MODAL LOGIC ───
         let currentReturnId = null;
         let currentReturnKpiName = null;
         const returnModalElem = document.getElementById('returnApplicationModal');
@@ -1096,7 +1364,6 @@
             returnModal = new bootstrap.Modal(returnModalElem);
         }
         
-        // Collect all reject/open-modal buttons
         const rejectButtons = document.querySelectorAll('.reject-open-modal');
         rejectButtons.forEach(btn => {
             btn.addEventListener('click', function(e) {
@@ -1107,15 +1374,11 @@
                     document.getElementById('returnKpiName').value = kpiName;
                     currentReturnId = kpiId;
                     currentReturnKpiName = kpiName;
-                    // Clear previous remarks
                     document.getElementById('returnRemarks').value = '';
-                } else {
-                    console.warn("Missing data-id for reject button");
                 }
             });
         });
         
-        // Confirm Return button: performs API call to reject/return the application
         const confirmReturnBtn = document.getElementById('confirmReturnBtn');
         if (confirmReturnBtn) {
             confirmReturnBtn.addEventListener('click', async function() {
@@ -1134,7 +1397,6 @@
                     return;
                 }
                 
-                // Disable button to prevent double submission
                 confirmReturnBtn.disabled = true;
                 confirmReturnBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                 
@@ -1152,20 +1414,16 @@
                     if (response.ok) {
                         result = await response.json();
                     } else {
-                        console.warn("Backend endpoint returned error");
                         result = { success: false, message: "Server error occurred" };
                     }
                     
                     if (result && result.success) {
-                        // Success: update the corresponding row in the table to show RETURNED status & disable buttons.
                         const targetRow = document.querySelector(`tr[data-id="${kpiId}"]`);
                         if (targetRow) {
-                            // Update status cell
                             const statusCell = targetRow.querySelector('.status-cell');
                             if (statusCell) {
                                 statusCell.innerHTML = `<span class="badge-status status-RETURNED"><i class="fas fa-undo-alt"></i>RETURNED</span>`;
                             }
-                            // Update action cell: replace buttons with disabled state and show returned info
                             const actionCell = targetRow.querySelector('.action-cell');
                             if (actionCell) {
                                 actionCell.innerHTML = `
@@ -1177,12 +1435,10 @@
                                     </button>
                                 `;
                             }
-                            // Update data-status attribute
                             targetRow.setAttribute('data-status', 'RETURNED');
                         }
                         alert(`✅ Application "${kpiNameDisplay || 'KPI'}" has been returned to Nodal Officer with remarks:\n"${remarks}"\n\nNodal Officer can now view the returned application and resubmit after corrections.`);
                         if (returnModal) returnModal.hide();
-                        // Reload the page to refresh the list
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
@@ -1199,7 +1455,6 @@
             });
         }
         
-        // Reset modal state when hidden
         if (returnModalElem) {
             returnModalElem.addEventListener('hidden.bs.modal', function () {
                 document.getElementById('returnRemarks').value = '';
@@ -1212,7 +1467,15 @@
             });
         }
         
-        // Add animation to indicators on page load
+        // ─── CHECK DOCUMENT STATUS FOR ALL ROWS ───
+        document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+            const kpiId = row.getAttribute('data-id');
+            if (kpiId) {
+                checkDocumentStatus(kpiId);
+            }
+        });
+        
+        // ─── ANIMATE INDICATORS ───
         const indicators = document.querySelectorAll('.performance-indicator');
         console.log(`Found ${indicators.length} performance indicators on ADRM page (SWAPPED: Red=Needs Improvement, Green=On Track)`);
         indicators.forEach(indicator => {
@@ -1225,7 +1488,7 @@
         console.log('ADRM Dashboard ready — SWAPPED indicators: Red=Needs Improvement, Green=On Track');
     })();
     
-    // Apply filter function - redirects to adrm page with selected month/year
+    // Apply filter function
     function applyFilter() {
         const month = document.getElementById('filterMonth').value;
         const year = document.getElementById('filterYear').value;
