@@ -811,7 +811,52 @@ def department():
             status = "SUBMITTED"
 
         user_department = session["department_id"]
+        
+        # Validate mandatory fields for submission
+        validation_errors = []
+        missing_fields = []
+        
+        for kpi in kpis:
+            if kpi.department_id != user_department:
+                continue
+                
+            month_value = request.form.get(f"month_{kpi.id}")
+            cumulative_value = request.form.get(f"cum_{kpi.id}")
+            prev_cum_value = request.form.get(f"prev_cum_{kpi.id}")
+            prev_year_value = request.form.get(f"prev_{kpi.id}")
+            
+            # Check if any field is empty or None
+            if action == "submit":
+                # All four fields must have values for submission
+                if month_value is None or month_value == "":
+                    missing_fields.append(f"Performance For Month - {kpi.kpi_name}")
+                if cumulative_value is None or cumulative_value == "":
+                    missing_fields.append(f"Cumulative (YTD) - {kpi.kpi_name}")
+                if prev_year_value is None or prev_year_value == "":
+                    missing_fields.append(f"Prev Year Value - {kpi.kpi_name}")
+                if prev_cum_value is None or prev_cum_value == "":
+                    missing_fields.append(f"Prev Year Cumulative - {kpi.kpi_name}")
+        
+        # If there are missing fields, return error
+        if missing_fields:
+            submission_error = "❌ Cannot submit: The following fields are empty:<br><ul>"
+            for field in missing_fields:
+                submission_error += f"<li>{field}</li>"
+            submission_error += "</ul>Please fill all mandatory fields before submitting."
+            
+            # Re-render with error message
+            return render_template(
+                "department_form.html",
+                kpis=kpis,
+                returned_kpis=returned_kpis,
+                returned_kpi_ids=returned_kpi_ids,
+                user_department=session["department_id"],
+                submission_error=submission_error,
+                selected_month=selected_month,
+                selected_year=selected_year
+            )
 
+        # Process the form data
         for kpi in kpis:
             if kpi.department_id != user_department:
                 continue
@@ -830,6 +875,7 @@ def department():
             if prev_year_value == "":
                 prev_year_value = None
 
+            # For drafts, we allow partial data; for submit, we already validated
             if month_value is not None or cumulative_value is not None or prev_year_value is not None or prev_cum_value is not None:
                 # Check if there's an existing record
                 existing = db.session.execute(
