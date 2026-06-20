@@ -517,6 +517,132 @@ def dashboard():
     Department : {session['department_id']}
     """
 
+@app.route("/api/get_annual_target/<int:kpi_id>/<int:year>")
+def get_annual_target(kpi_id, year):
+    """Get annual target for a KPI for a specific year from annualtarget_info"""
+    try:
+        # Check if year-specific target exists in annualtarget_info
+        result = db.session.execute(
+            db.text("""
+                SELECT annual_target 
+                FROM annualtarget_info 
+                WHERE ref_id = :kpi_id AND year = :year
+            """),
+            {"kpi_id": kpi_id, "year": year}
+        ).fetchone()
+        
+        if result and result.annual_target is not None:
+            return jsonify({
+                "success": True,
+                "annual_target": float(result.annual_target),
+                "year": year,
+                "source": "annualtarget_info"
+            })
+        
+        # No target found - return 0 as default
+        return jsonify({
+            "success": True,
+            "annual_target": 0,
+            "year": year,
+            "source": "default",
+            "message": "No target found for this KPI and year"
+        })
+        
+    except Exception as e:
+        print(f"Error fetching annual target: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/hod/forward_all", methods=["POST"])
+def hod_forward_all():
+    """Forward all submitted KPIs for the selected month/year to Nodal Officer"""
+    if "user_id" not in session:
+        return jsonify({"success": False, "message": "Login required"}), 401
+    
+    if session["role"] != "LEVEL2":
+        return jsonify({"success": False, "message": "Access Denied"}), 403
+    
+    try:
+        selected_month = request.form.get("month")
+        selected_year = request.form.get("year")
+        
+        if not selected_month or not selected_year:
+            return jsonify({"success": False, "message": "Month and Year are required"}), 400
+        
+        try:
+            selected_year = int(selected_year)
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid year"}), 400
+        
+        department_id = session["department_id"]
+        
+        # Get all SUBMITTED KPIs for this department, month, and year
+        result = db.session.execute(
+            db.text("""
+                SELECT id, kpi_id 
+                FROM monthly_data 
+                WHERE status = 'SUBMITTED'
+                AND kpi_id IN (
+                    SELECT id FROM kpis WHERE department_id = :department_id
+                )
+                AND UPPER(month) = UPPER(:month)
+                AND year = :year
+            """),
+            {
+                "department_id": department_id,
+                "month": selected_month,
+                "year": selected_year
+            }
+        )
+        
+        submitted_kpis = result.fetchall()
+        
+        if not submitted_kpis:
+            return jsonify({"success": False, "message": "No submitted KPIs found to forward"}), 400
+        
+        # Check if all submitted KPIs have uploaded documents
+        missing_docs = []
+        for kpi in submitted_kpis:
+            doc_info = get_document_info(kpi.id)
+            if not doc_info:
+                # Get KPI name for better error message
+                kpi_name_result = db.session.execute(
+                    db.text("SELECT kpi_name FROM kpis WHERE id = :id"),
+                    {"id": kpi.kpi_id}
+                ).fetchone()
+                kpi_name = kpi_name_result.kpi_name if kpi_name_result else f"KPI #{kpi.kpi_id}"
+                missing_docs.append(f"{kpi_name} (ID: {kpi.id})")
+        
+        if missing_docs:
+            return jsonify({
+                "success": False, 
+                "message": f"The following KPIs do not have signed documents uploaded:\n{', '.join(missing_docs)}\n\nPlease upload signed documents for all KPIs before forwarding."
+            }), 400
+        
+        # Update all submitted KPIs to APPROVED status
+        approved_count = 0
+        for kpi in submitted_kpis:
+            db.session.execute(
+                db.text("""
+                    UPDATE monthly_data
+                    SET status = 'APPROVED'
+                    WHERE id = :id AND status = 'SUBMITTED'
+                """),
+                {"id": kpi.id}
+            )
+            approved_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"✅ {approved_count} KPI(s) forwarded to Nodal Officer successfully!"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in hod_forward_all: {str(e)}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
 @app.route("/drm")
 def drm():
     if "user_id" not in session:
@@ -544,10 +670,11 @@ def drm():
                 md.remarks,
                 md.created_at,
                 k.kpi_name,
-                k.annual_target,
+                COALESCE(at.annual_target, 0) as annual_target,
                 COALESCE(k.unit, '') as unit
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
             WHERE md.status = 'FORWARDED_TO_DRM'
             AND md.month = :month
             AND md.year = :year
@@ -725,7 +852,7 @@ def department():
     except ValueError:
         selected_year = 2026
 
-    # Query for KPIs with their current data
+    # Query for KPIs with their current data and year-specific annual target
     result = db.session.execute(
         db.text("""
             SELECT
@@ -737,7 +864,8 @@ def department():
                 md.status,
                 md.remarks,
                 prev.performance_month AS previous_year_value,
-                prev.cumulative_performance AS previous_year_cumulative
+                prev.cumulative_performance AS previous_year_cumulative,
+                COALESCE(at.annual_target, 0) as display_annual_target
             FROM kpis k
             JOIN departments d
             ON k.department_id = d.id
@@ -751,6 +879,10 @@ def department():
             AND prev.entered_by = :user_id
             AND prev.month = :month
             AND prev.year = :previous_year
+            LEFT JOIN annualtarget_info at
+            ON at.ref_id = k.id
+            AND at.year = :year
+            WHERE k.department_id = :dept_id
             ORDER BY
                 k.display_order,
                 k.id
@@ -759,7 +891,8 @@ def department():
             "user_id": session["user_id"],
             "month": selected_month,
             "year": selected_year,
-            "previous_year": selected_year - 1
+            "previous_year": selected_year - 1,
+            "dept_id": user_department
         }
     )
 
@@ -781,10 +914,11 @@ def department():
                 md.year,
                 k.kpi_name,
                 k.unit,
-                k.annual_target,
+                COALESCE(at.annual_target, 0) as display_annual_target,
                 k.section_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
             WHERE md.entered_by = :user_id
             AND md.status = 'RETURNED'
             AND md.month = :month
@@ -985,10 +1119,11 @@ def department():
                     md.year,
                     k.kpi_name,
                     k.unit,
-                    k.annual_target,
+                    COALESCE(at.annual_target, 0) as display_annual_target,
                     k.section_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
+                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
                 WHERE md.entered_by = :user_id
                 AND md.status = 'RETURNED'
                 AND md.month = :month
@@ -1044,7 +1179,7 @@ def hod():
     except ValueError:
         selected_year = 2026
 
-    # Query to get all submitted KPIs with previous year data
+    # Query to get all submitted KPIs with previous year data and year-specific targets
     result = db.session.execute(
         db.text("""
             SELECT
@@ -1060,12 +1195,13 @@ def hod():
                 COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
                 COALESCE(k.unit, '') as unit,
-                k.annual_target,
+                COALESCE(at.annual_target, 0) as annual_target,
                 k.section_name,
                 d.dept_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
             WHERE md.status = 'SUBMITTED'
             AND k.department_id = :department_id
             AND UPPER(md.month) = UPPER(:month)
@@ -1135,7 +1271,7 @@ def hod_download_template(monthly_data_id):
         return "Access Denied"
     
     try:
-        # Fetch KPI data
+        # Fetch KPI data with year-specific target
         result = db.session.execute(
             db.text("""
                 SELECT 
@@ -1147,13 +1283,14 @@ def hod_download_template(monthly_data_id):
                     md.remarks,
                     k.kpi_name,
                     k.unit,
-                    k.annual_target,
+                    COALESCE(at.annual_target, 0) as annual_target,
                     d.dept_name,
                     u.username as entered_by_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
                 JOIN departments d ON k.department_id = d.id
                 JOIN users u ON md.entered_by = u.id
+                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
                 WHERE md.id = :id
                 AND md.status = 'SUBMITTED'
                 AND k.department_id = :dept_id
@@ -1328,13 +1465,14 @@ def hod_bulk_download_template():
                     md.remarks,
                     k.kpi_name,
                     k.unit,
-                    k.annual_target,
+                    COALESCE(at.annual_target, 0) as annual_target,
                     d.dept_name,
                     u.username as entered_by_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
                 JOIN departments d ON k.department_id = d.id
                 JOIN users u ON md.entered_by = u.id
+                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
                 WHERE md.id IN ({placeholders})
                 AND md.status = 'SUBMITTED'
                 AND k.department_id = :dept_id
@@ -1895,12 +2033,13 @@ def nodal():
                 COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
                 COALESCE(k.unit, '') as unit,
-                k.annual_target,
+                COALESCE(at.annual_target, 0) as annual_target,
                 k.section_name,
                 d.dept_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
             WHERE md.status = 'APPROVED'
             AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
@@ -1994,12 +2133,13 @@ def adrm():
                 COALESCE(CAST(md.cumulative_performance_of_prev_year AS DECIMAL(10,2)), 0) as cumulative_performance_of_prev_year,
                 k.kpi_name,
                 COALESCE(k.unit, '') as unit,
-                k.annual_target,
+                COALESCE(at.annual_target, 0) as annual_target,
                 k.section_name,
                 d.dept_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
             WHERE md.status = 'FORWARDED_TO_ADRM'
             AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
@@ -2111,8 +2251,6 @@ def forward_to_drm(id):
         return "Access Denied"
     
     try:
-        # REMOVED: copy_to_approved_table(id) - Only DRM should copy to approved_data
-        
         db.session.execute(
             db.text("""
                 UPDATE monthly_data
@@ -2137,8 +2275,6 @@ def forward_to_adrm(id):
         return "Access Denied"
     
     try:
-        # REMOVED: copy_to_approved_table(id) - Only DRM should copy to approved_data
-        
         db.session.execute(
             db.text("""
                 UPDATE monthly_data
@@ -2266,17 +2402,45 @@ def update_kpi(id):
     annual_target = request.form["annual_target"]
 
     try:
-        db.session.execute(
+        # Update or insert into annualtarget_info for current year
+        current_year = datetime.now().year
+        
+        # Check if record exists
+        existing = db.session.execute(
             db.text("""
-                UPDATE kpis
-                SET annual_target = :annual_target
-                WHERE id = :id
+                SELECT * FROM annualtarget_info 
+                WHERE ref_id = :ref_id AND year = :year
             """),
-            {
-                "annual_target": annual_target,
-                "id": id
-            }
-        )
+            {"ref_id": id, "year": current_year}
+        ).fetchone()
+        
+        if existing:
+            # Update existing
+            db.session.execute(
+                db.text("""
+                    UPDATE annualtarget_info
+                    SET annual_target = :annual_target
+                    WHERE ref_id = :ref_id AND year = :year
+                """),
+                {
+                    "annual_target": annual_target,
+                    "ref_id": id,
+                    "year": current_year
+                }
+            )
+        else:
+            # Insert new
+            db.session.execute(
+                db.text("""
+                    INSERT INTO annualtarget_info (ref_id, year, annual_target)
+                    VALUES (:ref_id, :year, :annual_target)
+                """),
+                {
+                    "ref_id": id,
+                    "year": current_year,
+                    "annual_target": annual_target
+                }
+            )
         db.session.commit()
     except Exception as e:
         db.session.rollback()

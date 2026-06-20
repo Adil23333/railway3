@@ -381,6 +381,45 @@
  font-weight: 700;
  margin-left: 2px;
  }
+
+ .target-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    min-width: 60px;
+ }
+ .target-badge.year-specific {
+    background-color: #198754;
+    color: white;
+ }
+ .target-badge.default-target {
+    background-color: #6c757d;
+    color: white;
+ }
+ .target-badge.loading {
+    background-color: #ffc107;
+    color: #856404;
+    animation: pulse 1s infinite;
+ }
+ @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+ }
+ .target-year-badge {
+    background: var(--rly-gold);
+    color: var(--rly-blue);
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-left: 4px;
+    font-weight: 700;
+ }
+ .target-cell {
+    min-width: 80px;
+ }
  
  @media (max-width: 992px) {
  .top-navbar { 
@@ -512,7 +551,7 @@
     <div class="row g-3 align-items-end">
         <div class="col-md-4">
             <label class="form-label fw-semibold"><i class="fas fa-calendar me-1"></i>Select Month</label>
-            <select name="month" class="form-select" onchange="this.form.submit()">
+            <select name="month" class="form-select" onchange="this.form.submit()" id="monthSelect">
                 <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
                 <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
                 <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
@@ -529,7 +568,7 @@
         </div>
         <div class="col-md-4">
             <label class="form-label fw-semibold"><i class="fas fa-calendar-alt me-1"></i>Select Year</label>
-            <select name="year" class="form-select" onchange="this.form.submit()">
+            <select name="year" class="form-select" onchange="handleYearChange(this)" id="yearSelect">
                 {% for y in range(2024, 2031) %}
                     <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
@@ -546,7 +585,7 @@
 <div class="table-card">
  <div class="table-card-header">
  <i class="fas fa-table" style="color:var(--rly-gold);"></i>
- <h6>KPI Performance Data Entry Form</h6>
+ <h6>KPI Performance Data Entry Form <span id="targetYearDisplay" class="target-year-badge">{{ selected_year }}</span></h6>
  </div>
  <div class="table-responsive">
  <table class="kpi-table">
@@ -555,7 +594,7 @@
     <th style="width: 5%">S.N</th>
     <th style="width: 22%">KPI</th>
     <th style="width: 6%">Unit</th>
-    <th style="width: 8%">Annual Target</th>
+    <th style="width: 8%">Annual Target <span id="targetYearBadge" class="target-year-badge">{{ selected_year }}</span></th>
     <th style="width: 12%">Prev Year Value <span class="required-star">*</span></th>
     <th style="width: 13%">Performance For Month <span class="required-star">*</span></th>
     <th style="width: 13%">Cumulative (YTD) <span class="required-star">*</span></th>
@@ -580,7 +619,23 @@
         <td class="sn-cell">{{ sn_counter.value }}{% set sn_counter.value = sn_counter.value + 1 %}</td>
         <td class="kpi-name-cell"><strong>{{ kpi.kpi_name }}</strong></td>
         <td class="unit-cell">{{ kpi.unit or '-' }}</td>
-        <td class="target-cell"><span class="badge bg-secondary">{{ kpi.annual_target or '-' }}</span></td>
+        <td class="target-cell">
+            <span class="target-badge {% if kpi.display_annual_target and kpi.display_annual_target != 0 %}year-specific{% else %}default-target{% endif %}" 
+                  id="target-{{ kpi.id }}" 
+                  data-kpi-id="{{ kpi.id }}" 
+                  data-year="{{ selected_year }}">
+                {{ kpi.display_annual_target or '0' }}
+            </span>
+            {% if kpi.display_annual_target and kpi.display_annual_target != 0 %}
+                <small class="text-success d-block" style="font-size: 0.6rem;">
+                    <i class="fas fa-check-circle"></i> Year-specific
+                </small>
+            {% else %}
+                <small class="text-muted d-block" style="font-size: 0.6rem;">
+                    <i class="fas fa-info-circle"></i> No target set
+                </small>
+            {% endif %}
+        </td>
         <td>
             <input type="number" step="any" name="prev_{{ kpi.id }}" 
                    value="{{ kpi.previous_year_value or '' }}" 
@@ -668,6 +723,122 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         if (toast && toast.remove) toast.remove();
     }, 4000);
+}
+
+// Fetch annual target for a specific KPI and year
+async function fetchAnnualTarget(kpiId, year) {
+    try {
+        const response = await fetch(`/api/get_annual_target/${kpiId}/${year}`);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching annual target:', error);
+        return null;
+    }
+}
+
+// Update annual target display for a single KPI
+async function updateTargetForKPI(kpiId, year) {
+    const targetElement = document.getElementById(`target-${kpiId}`);
+    if (!targetElement) return;
+    
+    // Show loading state
+    targetElement.className = 'target-badge loading';
+    targetElement.textContent = 'Loading...';
+    
+    try {
+        const data = await fetchAnnualTarget(kpiId, year);
+        
+        if (data && data.success && data.annual_target !== null && data.annual_target !== 0) {
+            // Year-specific target found
+            targetElement.textContent = data.annual_target;
+            targetElement.className = 'target-badge year-specific';
+            targetElement.title = `Target for ${year} (Year-specific)`;
+            
+            // Update the small indicator text
+            const parentCell = targetElement.closest('.target-cell');
+            if (parentCell) {
+                // Remove existing indicator
+                const existingIndicator = parentCell.querySelector('small');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                // Add new indicator
+                const indicator = document.createElement('small');
+                indicator.className = 'text-success d-block';
+                indicator.style.fontSize = '0.6rem';
+                indicator.innerHTML = '<i class="fas fa-check-circle"></i> Year-specific';
+                parentCell.appendChild(indicator);
+            }
+        } else {
+            // No target found - show 0
+            targetElement.textContent = '0';
+            targetElement.className = 'target-badge default-target';
+            targetElement.title = 'No target set';
+            
+            const parentCell = targetElement.closest('.target-cell');
+            if (parentCell) {
+                const existingIndicator = parentCell.querySelector('small');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                const indicator = document.createElement('small');
+                indicator.className = 'text-muted d-block';
+                indicator.style.fontSize = '0.6rem';
+                indicator.innerHTML = '<i class="fas fa-info-circle"></i> No target set';
+                parentCell.appendChild(indicator);
+            }
+        }
+    } catch (error) {
+        console.error('Error updating target for KPI', kpiId, error);
+        targetElement.textContent = '0';
+        targetElement.className = 'target-badge default-target';
+    }
+}
+
+// Update all targets when year changes
+async function updateAllTargets(year) {
+    const targetElements = document.querySelectorAll('.target-badge');
+    const updatePromises = [];
+    
+    targetElements.forEach(element => {
+        const kpiId = element.getAttribute('data-kpi-id');
+        if (kpiId) {
+            updatePromises.push(updateTargetForKPI(kpiId, year));
+        }
+    });
+    
+    await Promise.all(updatePromises);
+    
+    // Update year badges
+    const yearBadges = document.querySelectorAll('.target-year-badge');
+    yearBadges.forEach(badge => {
+        badge.textContent = year;
+    });
+    
+    const targetYearDisplay = document.getElementById('targetYearDisplay');
+    if (targetYearDisplay) {
+        targetYearDisplay.textContent = year;
+    }
+    
+    showToast(`Annual targets updated for ${year}`, 'info');
+}
+
+// Handle year change
+function handleYearChange(selectElement) {
+    const selectedYear = selectElement.value;
+    const form = selectElement.closest('form');
+    
+    // Show loading toast
+    showToast(`Loading targets for ${selectedYear}...`, 'info');
+    
+    // Update targets
+    updateAllTargets(selectedYear).then(() => {
+        // Submit the form after updating targets
+        if (form) {
+            form.submit();
+        }
+    });
 }
 
 // Scroll to KPI function for returned items
@@ -872,7 +1043,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 1000);
     
-    console.log('Department KPI Entry form loaded – Mandatory fields validation enabled');
+    // Initialize targets for current year
+    const currentYear = document.getElementById('yearSelect')?.value || '{{ selected_year }}';
+    if (currentYear) {
+        setTimeout(() => {
+            updateAllTargets(currentYear);
+        }, 500);
+    }
+    
+    console.log('Department KPI Entry form loaded – Year-specific targets enabled');
 });
 </script>
 </body>

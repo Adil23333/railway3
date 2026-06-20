@@ -291,23 +291,24 @@
  opacity: 0.7;
  }
  
- .btn-approve-bulk {
+ .btn-forward-all {
  background: #198754; 
  color: #fff;
  border: none;
  border-radius: 5px;
- padding: .3rem 1rem;
- font-size: .75rem;
- font-weight: 600;
+ padding: .45rem 1.2rem;
+ font-size: .82rem;
+ font-weight: 700;
  display: inline-flex;
  align-items: center;
- gap: .35rem;
+ gap: .5rem;
  transition: all .15s;
  cursor: pointer;
  }
- .btn-approve-bulk:hover { 
+ .btn-forward-all:hover { 
  background: #157347; 
  transform: translateY(-1px); 
+ color: #fff;
  }
  
  .submission-date {
@@ -574,6 +575,42 @@
     transform: translateY(-1px);
  }
  
+ .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+ }
+ 
+ .action-buttons .btn-group {
+    width: 100%;
+ }
+ 
+ .action-buttons .btn-group .btn {
+    flex: 1;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+ }
+ 
+ .return-remark-input {
+    display: none;
+    margin-top: 5px;
+ }
+ 
+ .return-remark-input textarea {
+    width: 100%;
+    font-size: 0.7rem;
+    padding: 0.3rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    min-height: 50px;
+ }
+ 
+ .return-remark-input .btn-return-confirm {
+    margin-top: 3px;
+    width: 100%;
+ }
+ 
  @media (max-width: 992px) {
  .top-navbar { 
  flex-direction: column; 
@@ -631,6 +668,12 @@
     margin-top: 4px;
     display: block;
  }
+ 
+ /* Modal for forwarding confirmation */
+ .modal-header-success {
+    background: #198754;
+    color: white;
+ }
  </style>
 </head>
 <body>
@@ -675,9 +718,23 @@
  <div class="page-heading d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
   <div>
    <h4><i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>Submitted KPIs – Pending Review</h4>
-   <p>Review department submissions, upload signed documents, and approve or return for revisions</p>
+   <p>Review department submissions. You can either <strong class="text-success">Forward Entire Report</strong> (if all are correct) or <strong class="text-danger">Return Individual KPIs</strong> with remarks for correction.</p>
   </div>
  </div>
+
+ {% if message %}
+ <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+  <i class="fas fa-check-circle me-2"></i>{{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+ </div>
+ {% endif %}
+
+ {% if error %}
+ <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+  <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+ </div>
+ {% endif %}
 
  <div class="filter-section">
   <form method="GET" action="/hod" id="filterForm">
@@ -726,6 +783,7 @@
     <div>
         <i class="fas fa-table me-2" style="color:var(--rly-gold);"></i>
         <h6 class="d-inline-block mb-0">KPI Performance Records</h6>
+        <span class="badge bg-light text-dark ms-2">{{ rows|length }} record(s)</span>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <button id="downloadBulkTemplateBtn" class="btn-download-bulk">
@@ -734,8 +792,8 @@
         <button id="bulkUploadBtn" class="btn-bulk-upload">
             <i class="fas fa-file-pdf"></i> Bulk Upload PDF
         </button>
-        <button id="approveSelectedBtn" class="btn-approve-bulk">
-            <i class="fas fa-check-double"></i> Approve Selected
+        <button id="forwardAllBtn" class="btn-forward-all">
+            <i class="fas fa-share"></i> Forward Entire Report
         </button>
     </div>
   </div>
@@ -754,7 +812,7 @@
        <th width="8%">Submitted On</th>
        <th width="10%">Signed Document</th>
        <th width="8%">Status</th>
-       <th width="12%">Action</th>
+       <th width="14%">Action</th>
       </tr>
     </thead>
     <tbody>
@@ -858,7 +916,7 @@
         </td>
        <td class="text-center action-cell">
         {% if row.status == 'SUBMITTED' %}
-         <div class="d-flex flex-column gap-1">
+         <div class="action-buttons">
           <div class="btn-group btn-group-sm" role="group">
            <a href="/hod/download_template/{{ row.id }}" class="btn-download-template btn-sm" title="Download Template">
             <i class="fas fa-file-pdf"></i> Template
@@ -867,9 +925,9 @@
             <i class="fas fa-upload"></i> Upload
            </button>
           </div>
-          <a href="/return/{{ row.id }}" class="btn-return btn-sm">
-           <i class="fas fa-undo-alt"></i> Return
-          </a>
+          <button class="btn-return btn-sm w-100" onclick="openReturnModal({{ row.id }}, '{{ row.kpi_name|replace("'", "\\'") }}', '{{ selected_month }} {{ selected_year }}')">
+           <i class="fas fa-undo-alt"></i> Return with Remarks
+          </button>
          </div>
         {% else %}
          <button class="btn-return btn-sm" disabled style="opacity:0.5;">
@@ -923,6 +981,129 @@
  </div>
 </div>
 
+<!-- Return KPI Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #dc3545; color: white;">
+                <h5 class="modal-title" id="returnModalLabel">
+                    <i class="fas fa-undo-alt me-2"></i>
+                    Return KPI with Remarks
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="returnForm" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> Returning a KPI will send it back to the Department Staff for correction.
+                        Please provide clear remarks explaining what needs to be fixed.
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-tag me-1"></i> KPI Name
+                            </label>
+                            <input type="text" class="form-control" id="returnKpiName" readonly style="background: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-day me-1"></i> Month/Year
+                            </label>
+                            <input type="text" class="form-control" id="returnMonthYear" readonly style="background: #f8f9fa;">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-comment-dots me-1"></i> Return Remarks <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="returnRemarks" name="remarks" rows="4" 
+                                  placeholder="Please provide detailed remarks explaining why this KPI is being returned. What needs to be corrected or clarified?" required></textarea>
+                        <small class="text-muted">These remarks will be visible to the Department Staff when they review the returned KPI.</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> The Department Staff will see your remarks and can resubmit the KPI after making the required corrections.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger" id="returnBtn">
+                        <i class="fas fa-undo-alt"></i> Return KPI
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Forward All Modal -->
+<div class="modal fade" id="forwardModal" tabindex="-1" aria-labelledby="forwardModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #198754; color: white;">
+                <h5 class="modal-title" id="forwardModalLabel">
+                    <i class="fas fa-share me-2"></i>
+                    Forward Entire Report
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Forward Entire Report?</strong>
+                    <p class="mb-0 mt-2">This will forward <strong>ALL</strong> submitted KPIs for {{ selected_month }} {{ selected_year }} to the Nodal Officer.</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h2 class="text-primary">{{ rows|length }}</h2>
+                                <p class="text-muted">Total KPIs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h2 class="text-success">{{ rows|selectattr('status', 'equalto', 'SUBMITTED')|list|length }}</h2>
+                                <p class="text-muted">Submitted KPIs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Prerequisites:</strong>
+                    <ul class="mb-0 mt-1">
+                        <li>All KPIs must have signed documents uploaded</li>
+                        <li>Only KPIs with <span class="badge bg-success">SUBMITTED</span> status will be forwarded</li>
+                        <li>KPIs with <span class="badge bg-danger">RETURNED</span> status will be excluded</li>
+                    </ul>
+                </div>
+                
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="forwardConfirmCheck">
+                    <label class="form-check-label" for="forwardConfirmCheck">
+                        I confirm that I have reviewed all KPIs and they are ready for forwarding to the Nodal Officer.
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmForwardBtn" disabled>
+                    <i class="fas fa-share"></i> Forward Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Upload Document Modal -->
 <div class="modal fade" id="uploadDocModal" tabindex="-1" aria-labelledby="uploadDocModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -938,8 +1119,8 @@
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Important:</strong> You must upload a signed PDF document for each KPI before approving it.
-                        This serves as your official approval signature and will be visible to all higher authorities.
+                        <strong>Important:</strong> You must upload a signed PDF document for each KPI before forwarding the report.
+                        This serves as your official approval signature.
                     </div>
                     
                     <input type="hidden" id="docKpiId" name="monthly_data_id">
@@ -1064,7 +1245,18 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
-// Single document upload functionality
+// Open Return Modal
+function openReturnModal(kpiId, kpiName, monthYear) {
+    document.getElementById('returnKpiName').value = kpiName;
+    document.getElementById('returnMonthYear').value = monthYear;
+    document.getElementById('returnRemarks').value = '';
+    document.getElementById('returnForm').action = `/return/${kpiId}`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('returnModal'));
+    modal.show();
+}
+
+// Open Upload Document Modal
 function openUploadModal(kpiId, kpiName, monthYear) {
     document.getElementById('docKpiId').value = kpiId;
     document.getElementById('docKpiName').value = kpiName;
@@ -1094,11 +1286,11 @@ function openUploadModal(kpiId, kpiName, monthYear) {
         })
         .catch(error => console.error('Error checking document:', error));
     
-    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('uploadDocModal'));
     modal.show();
 }
 
+// Delete Document
 function deleteDocument(kpiId) {
     if (!confirm('Are you sure you want to delete the uploaded document?')) {
         return;
@@ -1120,7 +1312,6 @@ function deleteDocument(kpiId) {
                 </div>
             `;
             document.getElementById('pdfFile').value = '';
-            // Refresh document status in table
             checkDocumentStatus(kpiId);
         } else {
             alert('Error: ' + data.message);
@@ -1132,7 +1323,7 @@ function deleteDocument(kpiId) {
     });
 }
 
-// Handle single document upload form submission
+// Handle single document upload
 document.getElementById('uploadDocForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -1158,14 +1349,11 @@ document.getElementById('uploadDocForm').addEventListener('submit', function(e) 
                     <i class="fas fa-check-circle"></i> ${data.message}
                 </div>
             `;
-            // Update document status in table
             checkDocumentStatus(parseInt(kpiId));
-            
-            // Close modal after 2 seconds
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('uploadDocModal'));
                 modal.hide();
-                location.reload(); // Refresh to update the table
+                location.reload();
             }, 2000);
         } else {
             statusDiv.innerHTML = `
@@ -1189,7 +1377,7 @@ document.getElementById('uploadDocForm').addEventListener('submit', function(e) 
     });
 });
 
-// Handle bulk upload form submission - FIXED: Uses selected KPIs only
+// Handle bulk upload
 document.getElementById('bulkUploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -1197,7 +1385,6 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
     const uploadBtn = document.getElementById('bulkUploadBtn');
     const statusDiv = document.getElementById('bulkUploadStatus');
     
-    // Get ONLY SELECTED KPI IDs
     const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
     const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
     
@@ -1216,7 +1403,6 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
     statusDiv.style.display = 'block';
     statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Uploading bulk document for ' + selectedIds.length + ' KPI(s)...</div>';
     
-    // Add the list of SELECTED KPI IDs to the form data
     formData.append('kpi_ids', JSON.stringify(selectedIds));
     
     fetch('/hod/bulk_upload_signed_document', {
@@ -1231,17 +1417,13 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
                     <i class="fas fa-check-circle"></i> ${data.message}
                 </div>
             `;
-            
-            // Update document status for all selected KPIs
             selectedIds.forEach(id => {
                 checkDocumentStatus(parseInt(id));
             });
-            
-            // Close modal after 2 seconds
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('bulkUploadModal'));
                 modal.hide();
-                location.reload(); // Refresh to update the table
+                location.reload();
             }, 2000);
         } else {
             statusDiv.innerHTML = `
@@ -1265,7 +1447,7 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
     });
 });
 
-// Open bulk upload modal - FIXED: Shows selected count
+// Bulk Upload button - show selected count
 document.getElementById('bulkUploadBtn').addEventListener('click', function() {
     const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
     const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
@@ -1300,7 +1482,6 @@ document.getElementById('downloadBulkTemplateBtn').addEventListener('click', fun
         return;
     }
     
-    // Show loading
     this.disabled = true;
     this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     
@@ -1335,7 +1516,7 @@ document.getElementById('downloadBulkTemplateBtn').addEventListener('click', fun
     });
 });
 
-// Function to check document status for a KPI
+// Check document status for a KPI
 function checkDocumentStatus(kpiId) {
     const statusDiv = document.getElementById(`docStatus-${kpiId}`);
     if (!statusDiv) return;
@@ -1386,6 +1567,118 @@ function checkDocumentStatus(kpiId) {
         });
 }
 
+// Forward All functionality
+document.getElementById('forwardAllBtn').addEventListener('click', function() {
+    const submittedRows = document.querySelectorAll('.kpi-checkbox');
+    const totalSubmitted = submittedRows.length;
+    
+    if (totalSubmitted === 0) {
+        alert('⚠️ No submitted KPIs found to forward.');
+        return;
+    }
+    
+    // Check if all submitted KPIs have documents uploaded
+    let hasMissingDoc = false;
+    let missingDocIds = [];
+    let checkedCount = 0;
+    let totalChecked = 0;
+    
+    const checkPromises = Array.from(submittedRows).map(cb => {
+        const id = cb.value;
+        totalChecked++;
+        return fetch(`/hod/check_document_status/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                checkedCount++;
+                if (!data.uploaded) {
+                    hasMissingDoc = true;
+                    missingDocIds.push(id);
+                }
+            });
+    });
+    
+    Promise.all(checkPromises).then(() => {
+        if (hasMissingDoc) {
+            alert(`⚠️ The following KPI(s) do not have signed documents uploaded:\n\n${missingDocIds.join('\n')}\n\nPlease upload signed documents for all KPIs before forwarding the report.`);
+            return;
+        }
+        
+        // Check for red indicators (Needs Improvement)
+        const redIndicators = Array.from(submittedRows).filter(cb => cb.getAttribute('data-indicator') === 'danger');
+        const greenIndicators = Array.from(submittedRows).filter(cb => cb.getAttribute('data-indicator') === 'success');
+        
+        let confirmMessage = `📤 FORWARD ENTIRE REPORT\n\n`;
+        confirmMessage += `You are about to forward ${totalSubmitted} KPI(s) to the Nodal Officer.\n\n`;
+        confirmMessage += `📊 Summary:\n`;
+        confirmMessage += `• Total KPIs: ${totalSubmitted}\n`;
+        confirmMessage += `• 🟢 On Track: ${greenIndicators.length}\n`;
+        confirmMessage += `• 🔴 Needs Improvement: ${redIndicators.length}\n\n`;
+        
+        if (redIndicators.length > 0) {
+            confirmMessage += `⚠️ WARNING: ${redIndicators.length} KPI(s) show "Needs Improvement" (Red indicator).\n`;
+            confirmMessage += `Please ensure you have reviewed these KPIs carefully.\n\n`;
+        }
+        
+        confirmMessage += `Do you want to proceed with forwarding this report?`;
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Show the forward modal
+        const modal = new bootstrap.Modal(document.getElementById('forwardModal'));
+        modal.show();
+    });
+});
+
+// Forward confirmation checkbox
+document.getElementById('forwardConfirmCheck').addEventListener('change', function() {
+    document.getElementById('confirmForwardBtn').disabled = !this.checked;
+});
+
+// Confirm Forward
+document.getElementById('confirmForwardBtn').addEventListener('click', function() {
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Forwarding...';
+    
+    const formData = new FormData();
+    formData.append('month', '{{ selected_month }}');
+    formData.append('year', '{{ selected_year }}');
+    
+    fetch('/hod/forward_all', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + data.message);
+            location.reload();
+        } else {
+            alert('❌ Error: ' + data.message);
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-share"></i> Forward Report';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error forwarding report. Please try again.');
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-share"></i> Forward Report';
+    });
+});
+
+// Select All functionality
+const selectAllCheckbox = document.getElementById("selectAll");
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener("change", function() {
+        const checkboxes = document.querySelectorAll(".kpi-checkbox");
+        checkboxes.forEach(cb => {
+            cb.checked = this.checked;
+        });
+    });
+}
+
 // Check document status for all rows on page load
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.kpi-checkbox').forEach(checkbox => {
@@ -1404,124 +1697,15 @@ if (logoutBtn) {
     });
 }
 
-// Select All functionality
-const selectAllCheckbox = document.getElementById("selectAll");
-if (selectAllCheckbox) {
-    selectAllCheckbox.addEventListener("change", function() {
-        const checkboxes = document.querySelectorAll(".kpi-checkbox");
-        checkboxes.forEach(cb => {
-            cb.checked = this.checked;
-        });
-    });
-}
-
-// Return button confirmation with indicator info
-const returnBtns = document.querySelectorAll('.btn-return:not([disabled])');
-returnBtns.forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        const row = this.closest('tr');
-        const kpiName = row?.querySelector('.kpi-name-cell strong')?.innerText || 'this KPI';
-        const cumulativeSpan = row?.querySelector('.cumulative-cell .perf-value');
-        const hasGreen = cumulativeSpan?.querySelector('.text-success') !== null;
-        const hasRed = cumulativeSpan?.querySelector('.text-danger') !== null;
-        const statusText = hasRed ? '🔴 RED - Needs Improvement' : (hasGreen ? '🟢 GREEN - On Track' : 'ℹ️ Info Only');
-        
-        const remarks = prompt(
-            `📋 Return KPI: "${kpiName}"\n\nCurrent Status: ${statusText}\n\nPlease provide detailed remarks/reason for return:`, 
-            'Needs revision or clarification'
-        );
-        
-        if (remarks === null) {
-            e.preventDefault();
-            return false;
+// Toggle select all when individual checkboxes change
+document.querySelectorAll('.kpi-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allChecked;
         }
-        
-        if (remarks.trim() === '') {
-            alert('⚠️ Please provide remarks before returning the KPI.');
-            e.preventDefault();
-            return false;
-        }
-        
-        const originalHref = this.getAttribute('href');
-        const encodedRemarks = encodeURIComponent(remarks.trim());
-        const separator = originalHref.includes('?') ? '&' : '?';
-        this.setAttribute('href', originalHref + separator + 'remarks=' + encodedRemarks);
-        return true;
     });
 });
-
-// Bulk approve with document check
-const bulkApproveBtn = document.getElementById("approveSelectedBtn");
-if (bulkApproveBtn) {
-    bulkApproveBtn.addEventListener("click", function() {
-        const checkedBoxes = document.querySelectorAll(".kpi-checkbox:checked");
-        const ids = Array.from(checkedBoxes).map(cb => cb.value);
-        
-        if (ids.length === 0) {
-            alert("⚠️ Please select at least one KPI to approve.");
-            return;
-        }
-        
-        // Check if all selected have documents uploaded
-        let hasMissingDoc = false;
-        let missingDocIds = [];
-        let checkedCount = 0;
-        
-        // Check document status for each selected
-        const checkPromises = ids.map(id => {
-            return fetch(`/hod/check_document_status/${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    checkedCount++;
-                    if (!data.uploaded) {
-                        hasMissingDoc = true;
-                        missingDocIds.push(id);
-                    }
-                });
-        });
-        
-        Promise.all(checkPromises).then(() => {
-            if (hasMissingDoc) {
-                alert(`⚠️ KPI(s) ${missingDocIds.join(', ')} require uploaded signed PDF document before approval.\n\nPlease upload the signed document first.`);
-                return;
-            }
-            
-            // Check if any selected KPI has red indicator (Needs Improvement)
-            const redIndicators = Array.from(checkedBoxes).filter(cb => cb.getAttribute('data-indicator') === 'danger');
-            
-            let confirmMessage = `✅ Approve ${ids.length} selected KPI(s)?\n\nAll selected KPIs have signed documents uploaded.`;
-            
-            if (redIndicators.length > 0) {
-                confirmMessage = `⚠️⚠️⚠️ WARNING: ${redIndicators.length} selected KPI(s) show "Needs Improvement" (Red indicator).\n\n${confirmMessage}\n\nDo you still want to approve these items?`;
-            }
-            
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-            
-            // Show loading state
-            bulkApproveBtn.disabled = true;
-            bulkApproveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
-            
-            fetch("/approve_bulk", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ids: ids })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message || "✅ Bulk approval completed successfully.");
-                location.reload();
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("❌ Error in bulk approval. Please try again.");
-                bulkApproveBtn.disabled = false;
-                bulkApproveBtn.innerHTML = '<i class="fas fa-check-double"></i> Approve Selected';
-            });
-        });
-    });
-}
 
 // Add animation to indicators on page load
 const indicators = document.querySelectorAll('.performance-indicator');
@@ -1532,13 +1716,11 @@ indicators.forEach(indicator => {
     }, 300);
 });
 
-// Toggle select all when individual checkboxes change
-document.querySelectorAll('.kpi-checkbox').forEach(cb => {
-    cb.addEventListener('change', function() {
-        const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
-        if (selectAllCheckbox) {
-            selectAllCheckbox.checked = allChecked;
-        }
+// Return button confirmation with remarks
+document.querySelectorAll('.btn-return:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        // This is now handled by the modal
+        // The modal is opened via onclick in the HTML
     });
 });
 </script>
