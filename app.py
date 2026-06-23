@@ -14,11 +14,11 @@ import uuid
 import glob
 import json
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from io import BytesIO
 
 app = Flask(__name__)
@@ -44,6 +44,60 @@ ALLOWED_EXTENSIONS = {'pdf'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db = SQLAlchemy(app)
+
+# ============ FINANCIAL YEAR HELPER FUNCTIONS ============
+
+def get_financial_year(year, month):
+    """
+    Get the financial year for a given year and month.
+    Financial year runs from April 1 to March 31.
+    If month is Jan-Mar (0-2), it belongs to previous financial year.
+    
+    Args:
+        year: The calendar year (e.g., 2025)
+        month: 0-indexed month (0=January, 11=December)
+    
+    Returns:
+        int: The financial year (e.g., 2024 for March 2025)
+    """
+    if month in [0, 1, 2]:  # Jan, Feb, Mar
+        return year - 1
+    else:  # Apr-Dec
+        return year
+
+def get_financial_year_from_month_string(year, month_string):
+    """
+    Get financial year from year and month name string.
+    
+    Args:
+        year: The calendar year (e.g., 2025)
+        month_string: Month name (e.g., 'MARCH', 'APRIL')
+    
+    Returns:
+        int: The financial year (e.g., 2024 for March 2025)
+    """
+    month_map = {
+        'JANUARY': 0, 'FEBRUARY': 1, 'MARCH': 2,
+        'APRIL': 3, 'MAY': 4, 'JUNE': 5,
+        'JULY': 6, 'AUGUST': 7, 'SEPTEMBER': 8,
+        'OCTOBER': 9, 'NOVEMBER': 10, 'DECEMBER': 11
+    }
+    month_num = month_map.get(month_string.upper(), 0)
+    return get_financial_year(year, month_num)
+
+def get_financial_year_display(financial_year):
+    """
+    Get display string for financial year.
+    
+    Args:
+        financial_year: The financial year (e.g., 2024)
+    
+    Returns:
+        str: Display format (e.g., "2024-25")
+    """
+    return f"{financial_year}-{str(financial_year + 1)[-2:]}"
+
+# ============ END FINANCIAL YEAR HELPER FUNCTIONS ============
 
 # Add connection check before each request
 @app.before_request
@@ -303,17 +357,20 @@ def drm_bulk_approve():
         print(f"Error in DRM bulk approve: {str(e)}")
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
 
-# REMOVED: drm_bulk_reject route
-# REMOVED: drm_bulk_freeze route
-    
 def get_document_info(monthly_data_id):
     """Get document info for a given KPI ID"""
     doc_path = get_document_path(monthly_data_id)
     if doc_path:
-        # Check if it's a bulk file
-        if doc_path.startswith('bulk_'):
+        # Check if it's a bulk file (starts with HOD_Bulk_Approval_)
+        if doc_path.startswith('HOD_Bulk_Approval_'):
+            return {
+                'path': doc_path,
+                'original_name': doc_path,
+                'is_bulk': True
+            }
+        # Check if it's a bulk file (starts with bulk_)
+        elif doc_path.startswith('bulk_'):
             # For bulk files, extract the original filename
-            # Format: bulk_{timestamp}_{original_filename}.pdf
             parts = doc_path.split('_', 2)
             if len(parts) >= 3:
                 original_name = parts[2].replace('.pdf', '')
@@ -521,21 +578,30 @@ def dashboard():
 def get_annual_target(kpi_id, year):
     """Get annual target for a KPI for a specific year from annualtarget_info"""
     try:
+        # Get month from request if provided, default to current month
+        month = request.args.get('month', 'MARCH', type=str)
+        
+        # Calculate financial year based on selected month
+        financial_year = get_financial_year_from_month_string(year, month)
+        
         # Check if year-specific target exists in annualtarget_info
         result = db.session.execute(
             db.text("""
                 SELECT annual_target 
                 FROM annualtarget_info 
-                WHERE ref_id = :kpi_id AND year = :year
+                WHERE ref_id = :kpi_id AND year = :financial_year
             """),
-            {"kpi_id": kpi_id, "year": year}
+            {"kpi_id": kpi_id, "financial_year": financial_year}
         ).fetchone()
         
         if result and result.annual_target is not None:
             return jsonify({
                 "success": True,
                 "annual_target": float(result.annual_target),
-                "year": year,
+                "year": financial_year,
+                "selected_year": year,
+                "selected_month": month,
+                "financial_year": get_financial_year_display(financial_year),
                 "source": "annualtarget_info"
             })
         
@@ -543,9 +609,12 @@ def get_annual_target(kpi_id, year):
         return jsonify({
             "success": True,
             "annual_target": 0,
-            "year": year,
+            "year": financial_year,
+            "selected_year": year,
+            "selected_month": month,
+            "financial_year": get_financial_year_display(financial_year),
             "source": "default",
-            "message": "No target found for this KPI and year"
+            "message": "No target found for this KPI and financial year"
         })
         
     except Exception as e:
@@ -659,6 +728,9 @@ def drm():
     except ValueError:
         selected_year = 2026
 
+    # Calculate financial year based on selected month
+    financial_year = get_financial_year_from_month_string(selected_year, selected_month)
+
     # Query to get all FORWARDED_TO_DRM KPIs with performance data and annual targets
     result = db.session.execute(
         db.text("""
@@ -674,7 +746,7 @@ def drm():
                 COALESCE(k.unit, '') as unit
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
-            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
             WHERE md.status = 'FORWARDED_TO_DRM'
             AND md.month = :month
             AND md.year = :year
@@ -682,7 +754,8 @@ def drm():
         """),
         {
             "month": selected_month,
-            "year": selected_year
+            "year": selected_year,
+            "financial_year": financial_year
         }
     )
 
@@ -719,7 +792,8 @@ def drm():
             'unit': row.unit,
             'monthly_val': monthly_val,
             'cumulative_val': cumulative_val,
-            'annual_target_val': annual_target
+            'annual_target_val': annual_target,
+            'financial_year_display': get_financial_year_display(financial_year)
         }
         rows_list.append(row_dict)
 
@@ -727,7 +801,8 @@ def drm():
         "drm.html",
         rows=rows_list,
         selected_month=selected_month,
-        selected_year=selected_year
+        selected_year=selected_year,
+        financial_year_display=get_financial_year_display(financial_year)
     )
 
 @app.route("/freeze/<int:id>")
@@ -852,6 +927,9 @@ def department():
     except ValueError:
         selected_year = 2026
 
+    # Calculate financial year based on selected month
+    financial_year = get_financial_year_from_month_string(selected_year, selected_month)
+
     # Query for KPIs with their current data and year-specific annual target
     result = db.session.execute(
         db.text("""
@@ -881,7 +959,7 @@ def department():
             AND prev.year = :previous_year
             LEFT JOIN annualtarget_info at
             ON at.ref_id = k.id
-            AND at.year = :year
+            AND at.year = :financial_year
             WHERE k.department_id = :dept_id
             ORDER BY
                 k.display_order,
@@ -892,7 +970,8 @@ def department():
             "month": selected_month,
             "year": selected_year,
             "previous_year": selected_year - 1,
-            "dept_id": user_department
+            "dept_id": user_department,
+            "financial_year": financial_year
         }
     )
 
@@ -918,7 +997,7 @@ def department():
                 k.section_name
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
-            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
             WHERE md.entered_by = :user_id
             AND md.status = 'RETURNED'
             AND md.month = :month
@@ -928,7 +1007,8 @@ def department():
         {
             "user_id": session["user_id"],
             "month": selected_month,
-            "year": selected_year
+            "year": selected_year,
+            "financial_year": financial_year
         }
     )
 
@@ -987,7 +1067,8 @@ def department():
                 user_department=session["department_id"],
                 submission_error=submission_error,
                 selected_month=selected_month,
-                selected_year=selected_year
+                selected_year=selected_year,
+                financial_year_display=get_financial_year_display(financial_year)
             )
 
         # Process the form data
@@ -1123,7 +1204,7 @@ def department():
                     k.section_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
-                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
                 WHERE md.entered_by = :user_id
                 AND md.status = 'RETURNED'
                 AND md.month = :month
@@ -1133,7 +1214,8 @@ def department():
             {
                 "user_id": session["user_id"],
                 "month": selected_month,
-                "year": selected_year
+                "year": selected_year,
+                "financial_year": financial_year
             }
         )
         returned_kpis = returned_result.fetchall()
@@ -1149,7 +1231,8 @@ def department():
             user_department=session["department_id"],
             message=message,
             selected_month=selected_month,
-            selected_year=selected_year
+            selected_year=selected_year,
+            financial_year_display=get_financial_year_display(financial_year)
         )
 
     return render_template(
@@ -1159,7 +1242,8 @@ def department():
         returned_kpi_ids=returned_kpi_ids,
         user_department=session["department_id"],
         selected_month=selected_month,
-        selected_year=selected_year
+        selected_year=selected_year,
+        financial_year_display=get_financial_year_display(financial_year)
     )
 
 @app.route("/hod")
@@ -1178,6 +1262,9 @@ def hod():
         selected_year = int(selected_year)
     except ValueError:
         selected_year = 2026
+
+    # Calculate financial year based on selected month
+    financial_year = get_financial_year_from_month_string(selected_year, selected_month)
 
     # Query to get all submitted KPIs with previous year data and year-specific targets
     result = db.session.execute(
@@ -1201,7 +1288,7 @@ def hod():
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
-            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
             WHERE md.status = 'SUBMITTED'
             AND k.department_id = :department_id
             AND UPPER(md.month) = UPPER(:month)
@@ -1211,7 +1298,8 @@ def hod():
         {
             "department_id": department_id,
             "month": selected_month,
-            "year": selected_year
+            "year": selected_year,
+            "financial_year": financial_year
         }
     )
 
@@ -1248,7 +1336,8 @@ def hod():
             'section_name': row.section_name,
             'dept_name': row.dept_name,
             'monthly_val': monthly_val,
-            'cumulative_val': cumulative_val
+            'cumulative_val': cumulative_val,
+            'financial_year_display': get_financial_year_display(financial_year)
         }
         rows_list.append(row_dict)
     
@@ -1256,14 +1345,15 @@ def hod():
         "hod_review.html",
         rows=rows_list,
         selected_month=selected_month,
-        selected_year=selected_year
+        selected_year=selected_year,
+        financial_year_display=get_financial_year_display(financial_year)
     )
 
-# HOD Document Upload Routes
+# ============ UPDATED PDF GENERATION FUNCTIONS WITH TABLE FORMAT ============
 
 @app.route("/hod/download_template/<int:monthly_data_id>")
 def hod_download_template(monthly_data_id):
-    """Download a PDF template for HOD to sign"""
+    """Download a PDF template for HOD to sign with KPI data in table format"""
     if "user_id" not in session:
         return redirect("/login")
     
@@ -1353,31 +1443,67 @@ def hod_download_template(monthly_data_id):
             fontName='Helvetica-Bold'
         )
         
+        # Table header style
+        table_header_style = ParagraphStyle(
+            'TableHeader',
+            parent=styles['Normal'],
+            fontSize=9,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold',
+            textColor=colors.white
+        )
+        
+        # Table cell style
+        table_cell_style = ParagraphStyle(
+            'TableCell',
+            parent=styles['Normal'],
+            fontSize=9,
+            alignment=TA_CENTER
+        )
+        
         # Add header
         story.append(Paragraph("INDIAN RAILWAYS", title_style))
         story.append(Paragraph("Palakkad Division - Southern Railway", subtitle_style))
         story.append(Paragraph("HOD Approval Form", subtitle_style))
         story.append(Spacer(1, 20))
         
-        # Add KPI details
-        story.append(Paragraph(f"<b>KPI Name:</b> {result.kpi_name}", normal_style))
-        story.append(Paragraph(f"<b>Department:</b> {result.dept_name}", normal_style))
-        story.append(Paragraph(f"<b>Month/Year:</b> {result.month} {result.year}", normal_style))
-        story.append(Paragraph(f"<b>Monthly Performance:</b> {result.performance_month if result.performance_month else 'N/A'} {result.unit if result.unit else ''}", normal_style))
-        story.append(Paragraph(f"<b>Cumulative Performance:</b> {result.cumulative_performance if result.cumulative_performance else 'N/A'} {result.unit if result.unit else ''}", normal_style))
-        story.append(Paragraph(f"<b>Annual Target:</b> {result.annual_target if result.annual_target else 'N/A'} {result.unit if result.unit else ''}", normal_style))
-        story.append(Spacer(1, 20))
+        # Create KPI details table
+        table_data = [
+            ['Parameter', 'Value'],
+            ['KPI Name', result.kpi_name],
+            ['Department', result.dept_name],
+            ['Month/Year', f"{result.month} {result.year}"],
+            ['Monthly Performance', f"{result.performance_month if result.performance_month else 'N/A'} {result.unit if result.unit else ''}"],
+            ['Cumulative Performance', f"{result.cumulative_performance if result.cumulative_performance else 'N/A'} {result.unit if result.unit else ''}"],
+            ['Annual Target', f"{result.annual_target if result.annual_target else 'N/A'} {result.unit if result.unit else ''}"],
+            ['Entered By', result.entered_by_name],
+            ['Remarks', result.remarks if result.remarks else 'No remarks provided']
+        ]
         
-        # Add remarks section
-        story.append(Paragraph("<b>Remarks:</b>", bold_style))
-        story.append(Paragraph(f"{result.remarks if result.remarks else 'No remarks provided'}", normal_style))
+        # Create table with proper styling
+        kpi_table = Table(table_data, colWidths=[2.5*inch, 3.5*inch])
+        kpi_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ]))
+        
+        story.append(kpi_table)
         story.append(Spacer(1, 20))
         
         # Add signature section
         story.append(Paragraph("<b>HOD Approval</b>", bold_style))
         story.append(Spacer(1, 10))
-        
-        # Add signature lines
         story.append(Paragraph("I, the undersigned, hereby approve the above KPI performance data.", normal_style))
         story.append(Spacer(1, 20))
         
@@ -1434,29 +1560,64 @@ def hod_download_template(monthly_data_id):
 
 @app.route("/hod/bulk_download_template", methods=["POST"])
 def hod_bulk_download_template():
-    """Download a combined PDF template for multiple KPIs"""
+    """Bulk download template for HOD approval with month and year from report"""
     if "user_id" not in session:
-        return jsonify({"success": False, "message": "Login required"}), 401
-    
-    if session["role"] != "LEVEL2":
-        return jsonify({"success": False, "message": "Access Denied"}), 403
-    
+        return jsonify({
+            "success": False,
+            "message": "Login required"
+        }), 401
+
+    if session.get("role") != "LEVEL2":
+        return jsonify({
+            "success": False,
+            "message": "Access denied"
+        }), 403
+
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         ids = data.get("ids", [])
-        
+
         if not ids:
-            return jsonify({"success": False, "message": "No KPI IDs provided"}), 400
-        
-        # Fetch KPI data for all IDs
-        placeholders = ','.join([':id' + str(i) for i in range(len(ids))])
-        params = {}
-        for i, kpi_id in enumerate(ids):
-            params[f'id{i}'] = kpi_id
-        
+            return jsonify({
+                "success": False,
+                "message": "No KPI IDs provided"
+            }), 400
+
+        ids = [int(x) for x in ids]
+
+        # Get the first KPI to extract month/year from the report
+        first_result = db.session.execute(
+            db.text("""
+                SELECT md.month, md.year
+                FROM monthly_data md
+                WHERE md.id = :id
+            """),
+            {"id": ids[0]}
+        ).fetchone()
+
+        if not first_result:
+            return jsonify({
+                "success": False,
+                "message": "Could not determine month/year"
+            }), 400
+
+        report_month = first_result.month.upper()
+        report_year = first_result.year
+
+        placeholders = ",".join(
+            f":id{i}" for i in range(len(ids))
+        )
+
+        params = {
+            f"id{i}": value
+            for i, value in enumerate(ids)
+        }
+
+        params["dept_id"] = session["department_id"]
+
         results = db.session.execute(
             db.text(f"""
-                SELECT 
+                SELECT
                     md.id,
                     md.performance_month,
                     md.cumulative_performance,
@@ -1465,153 +1626,188 @@ def hod_bulk_download_template():
                     md.remarks,
                     k.kpi_name,
                     k.unit,
-                    COALESCE(at.annual_target, 0) as annual_target,
+                    COALESCE(at.annual_target, 0) AS annual_target,
                     d.dept_name,
-                    u.username as entered_by_name
+                    u.username AS entered_by_name
                 FROM monthly_data md
                 JOIN kpis k ON md.kpi_id = k.id
                 JOIN departments d ON k.department_id = d.id
                 JOIN users u ON md.entered_by = u.id
-                LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+                LEFT JOIN annualtarget_info at
+                ON at.ref_id = k.id AND at.year = md.year
                 WHERE md.id IN ({placeholders})
-                AND md.status = 'SUBMITTED'
-                AND k.department_id = :dept_id
+                AND md.status='SUBMITTED'
+                AND k.department_id=:dept_id
                 ORDER BY k.display_order, k.id
             """),
-            {**params, "dept_id": session["department_id"]}
+            params
         ).fetchall()
-        
+
         if not results:
-            return jsonify({"success": False, "message": "No valid KPIs found"}), 400
-        
-        # Create PDF
+            return jsonify({
+                "success": False,
+                "message": "No valid KPIs found"
+            }), 400
+
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, 
-                               rightMargin=72, leftMargin=72,
-                               topMargin=72, bottomMargin=72)
-        
-        # Story for PDF
-        story = []
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=landscape(A4),
+            leftMargin=40,
+            rightMargin=40,
+            topMargin=40,
+            bottomMargin=40
+        )
+
         styles = getSampleStyleSheet()
-        
-        # Title style
+        story = []
+
         title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
+            "Title",
+            parent=styles["Heading1"],
             fontSize=16,
             alignment=TA_CENTER,
-            spaceAfter=20,
-            textColor=colors.HexColor('#003366')
+            textColor=colors.HexColor("#003366")
         )
-        
+
         subtitle_style = ParagraphStyle(
-            'CustomSubtitle',
-            parent=styles['Heading2'],
+            "Subtitle",
+            parent=styles["Heading2"],
             fontSize=12,
             alignment=TA_CENTER,
-            spaceAfter=10,
-            textColor=colors.HexColor('#004080')
+            textColor=colors.HexColor("#004080")
         )
-        
+
         normal_style = ParagraphStyle(
-            'CustomNormal',
-            parent=styles['Normal'],
-            fontSize=9,
-            alignment=TA_LEFT,
-            spaceAfter=4
+            "Normal",
+            parent=styles["Normal"],
+            fontSize=8
         )
-        
+
         bold_style = ParagraphStyle(
-            'CustomBold',
-            parent=styles['Normal'],
-            fontSize=9,
-            alignment=TA_LEFT,
-            spaceAfter=4,
-            fontName='Helvetica-Bold'
+            "Bold",
+            parent=styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=10
         )
-        
-        # Add header
+
+        # Header with report month/year
         story.append(Paragraph("INDIAN RAILWAYS", title_style))
         story.append(Paragraph("Palakkad Division - Southern Railway", subtitle_style))
-        story.append(Paragraph("HOD Bulk Approval Form", subtitle_style))
+        story.append(Paragraph(f"HOD Bulk Approval Form - {report_month} {report_year}", subtitle_style))
         story.append(Spacer(1, 20))
-        
-        # Add each KPI
-        for idx, row in enumerate(results):
-            if idx > 0:
-                story.append(Spacer(1, 20))
-                story.append(Paragraph("-" * 80, normal_style))
-                story.append(Spacer(1, 10))
-            
-            story.append(Paragraph(f"<b>KPI #{idx + 1}:</b>", bold_style))
-            story.append(Paragraph(f"<b>KPI Name:</b> {row.kpi_name}", normal_style))
-            story.append(Paragraph(f"<b>Department:</b> {row.dept_name}", normal_style))
-            story.append(Paragraph(f"<b>Month/Year:</b> {row.month} {row.year}", normal_style))
-            story.append(Paragraph(f"<b>Monthly Performance:</b> {row.performance_month if row.performance_month else 'N/A'} {row.unit if row.unit else ''}", normal_style))
-            story.append(Paragraph(f"<b>Cumulative Performance:</b> {row.cumulative_performance if row.cumulative_performance else 'N/A'} {row.unit if row.unit else ''}", normal_style))
-            story.append(Paragraph(f"<b>Annual Target:</b> {row.annual_target if row.annual_target else 'N/A'} {row.unit if row.unit else ''}", normal_style))
-            story.append(Paragraph(f"<b>Remarks:</b> {row.remarks if row.remarks else 'No remarks provided'}", normal_style))
-            story.append(Spacer(1, 5))
-        
-        # Add signature section
+
+        table_data = [[
+            "S.No",
+            "KPI Name",
+            "Department",
+            "Month/Year",
+            "Monthly Perf.",
+            "Cumulative Perf.",
+            "Annual Target",
+            "Remarks"
+        ]]
+
+        for index, row in enumerate(results, start=1):
+            unit = row.unit or ""
+            table_data.append([
+                str(index),
+                row.kpi_name,
+                row.dept_name,
+                f"{row.month}/{row.year}",
+                f"{row.performance_month or 'N/A'} {unit}",
+                f"{row.cumulative_performance or 'N/A'} {unit}",
+                f"{row.annual_target or 'N/A'} {unit}",
+                row.remarks or "-"
+            ])
+
+        main_table = Table(
+            table_data,
+            colWidths=[
+                0.5*inch,   # S.No
+                4.8*inch,   # KPI Name
+                1.0*inch,   # Department
+                1.0*inch,   # Month/Year
+                1.0*inch,   # Monthly Perf
+                1.2*inch,   # Cumulative Perf
+                1.1*inch,   # Annual Target
+                0.8*inch    # Remarks
+            ]
+        )
+
+        table_style = [
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4)
+        ]
+
+        for i in range(1, len(table_data)):
+            bg = colors.HexColor('#f0f4f9') if i % 2 else colors.white
+            table_style.append(('BACKGROUND', (0, i), (-1, i), bg))
+
+        main_table.setStyle(TableStyle(table_style))
+        story.append(main_table)
         story.append(Spacer(1, 20))
-        story.append(Paragraph("-" * 80, normal_style))
-        story.append(Spacer(1, 10))
+
+        # HOD signing section
         story.append(Paragraph("<b>HOD Approval</b>", bold_style))
         story.append(Spacer(1, 10))
-        story.append(Paragraph("I, the undersigned, hereby approve the above KPI performance data.", normal_style))
-        story.append(Spacer(1, 20))
-        
-        # Signature box
-        signature_data = [
-            ['', ''],
-            ['Signature:', '_________________________'],
-            ['', ''],
-            ['Name:', '_________________________'],
-            ['', ''],
-            ['Designation:', 'Head of Department'],
-            ['', ''],
-            ['Date:', '_________________________'],
-            ['', ''],
-            ['Place:', '_________________________']
-        ]
-        
-        signature_table = Table(signature_data, colWidths=[2*inch, 3*inch])
+        story.append(Paragraph("I hereby approve the above KPI performance data.", normal_style))
+        story.append(Spacer(1, 15))
+
+        signature_table = Table(
+            [
+                ["Signature :", "________________________"],
+                ["Name :", "________________________"],
+                ["Designation :", "Head of Department"],
+                ["Date :", "________________________"],
+                ["Place :", "________________________"]
+            ],
+            colWidths=[2*inch, 3*inch]
+        )
+
         signature_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 5),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6)
         ]))
-        
+
         story.append(signature_table)
         story.append(Spacer(1, 20))
-        
-        # Add footer
-        story.append(Paragraph("<i>This document is a template for HOD bulk approval. Please sign and upload the signed copy.</i>", normal_style))
         story.append(Paragraph(f"<i>Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M')}</i>", normal_style))
-        
-        # Build PDF
+
         doc.build(story)
-        
-        # Get PDF data
-        pdf_data = buffer.getvalue()
+
+        pdf = buffer.getvalue()
         buffer.close()
-        
-        # Return PDF
+
+        # Generate filename with report month and year (NOT submission date)
+        # Format: HOD_Bulk_Approval_JUNE_2026.pdf
+        filename = f"HOD_Bulk_Approval_{report_month}_{report_year}.pdf"
+
         return send_file(
-            BytesIO(pdf_data),
-            mimetype='application/pdf',
+            BytesIO(pdf),
+            mimetype="application/pdf",
             as_attachment=True,
-            download_name=f"HOD_Bulk_Approval_Template_{datetime.now().strftime('%Y%m%d')}.pdf"
+            download_name=filename
         )
-        
+
     except Exception as e:
-        print(f"Error generating bulk template: {str(e)}")
-        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+        print(f"Error in bulk download template: {str(e)}")
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+# ============ END UPDATED PDF GENERATION FUNCTIONS ============
 
 @app.route("/hod/upload_signed_document/<int:monthly_data_id>", methods=["POST"])
 def hod_upload_signed_document(monthly_data_id):
@@ -1796,7 +1992,7 @@ def hod_check_document_status(monthly_data_id):
 
 @app.route("/hod/bulk_upload_signed_document", methods=["POST"])
 def hod_bulk_upload_signed_document():
-    """HOD uploads a single signed PDF for multiple KPIs"""
+    """HOD uploads a single signed PDF for multiple KPIs with report month/year filename"""
     if "user_id" not in session:
         return jsonify({"success": False, "message": "Login required"}), 401
     
@@ -1823,6 +2019,25 @@ def hod_bulk_upload_signed_document():
         if not allowed_file(file.filename):
             return jsonify({"success": False, "message": "Only PDF files are allowed"}), 400
         
+        # Get the report month/year from the first KPI
+        first_result = db.session.execute(
+            db.text("""
+                SELECT md.month, md.year
+                FROM monthly_data md
+                WHERE md.id = :id
+            """),
+            {"id": kpi_ids[0]}
+        ).fetchone()
+        
+        if not first_result:
+            return jsonify({
+                "success": False, 
+                "message": "Could not determine report month/year"
+            }), 400
+        
+        report_month = first_result.month.upper()
+        report_year = first_result.year
+        
         # Verify all KPIs belong to HOD's department and are in SUBMITTED status
         placeholders = ','.join([':id' + str(i) for i in range(len(kpi_ids))])
         params = {}
@@ -1848,11 +2063,19 @@ def hod_bulk_upload_signed_document():
                 "message": "Some KPIs are not in SUBMITTED status or not in your department"
             }), 400
         
-        # Generate unique filename for bulk upload
+        # Generate filename with report month/year
+        # Format: HOD_Bulk_Approval_{MONTH}_{YEAR}.pdf
         original_filename = secure_filename(file.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"bulk_{timestamp}_{original_filename}"
+        ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
+        unique_filename = f"HOD_Bulk_Approval_{report_month}_{report_year}.{ext}"
+        
+        # If file already exists, add a counter
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        counter = 1
+        while os.path.exists(file_path):
+            unique_filename = f"HOD_Bulk_Approval_{report_month}_{report_year}_{counter}.{ext}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            counter += 1
         
         # Save the file
         file.save(file_path)
@@ -1864,11 +2087,17 @@ def hod_bulk_upload_signed_document():
             if existing_doc:
                 existing_path = os.path.join(app.config['UPLOAD_FOLDER'], existing_doc)
                 if os.path.exists(existing_path) and existing_doc != unique_filename:
-                    os.remove(existing_path)
+                    try:
+                        os.remove(existing_path)
+                    except:
+                        pass
                 # Delete existing mapping file
                 existing_mapping = os.path.join(app.config['UPLOAD_FOLDER'], f"bulk_mapping_{kpi_id}.txt")
                 if os.path.exists(existing_mapping):
-                    os.remove(existing_mapping)
+                    try:
+                        os.remove(existing_mapping)
+                    except:
+                        pass
             
             # Store remarks for each KPI
             remarks_file = os.path.join(app.config['UPLOAD_FOLDER'], f"{kpi_id}_remarks.txt")
@@ -1883,7 +2112,7 @@ def hod_bulk_upload_signed_document():
         return jsonify({
             "success": True,
             "message": f"Bulk PDF uploaded successfully for {len(kpi_ids)} KPI(s). You can now approve them.",
-            "filename": original_filename
+            "filename": unique_filename
         })
         
     except Exception as e:
@@ -2017,6 +2246,9 @@ def nodal():
     except ValueError:
         selected_year = 2026
 
+    # Calculate financial year based on selected month
+    financial_year = get_financial_year_from_month_string(selected_year, selected_month)
+
     # Query to get all APPROVED KPIs with annual targets for performance indicators
     result = db.session.execute(
         db.text("""
@@ -2039,7 +2271,7 @@ def nodal():
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
-            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
             WHERE md.status = 'APPROVED'
             AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
@@ -2047,7 +2279,8 @@ def nodal():
         """),
         {
             "month": selected_month,
-            "year": selected_year
+            "year": selected_year,
+            "financial_year": financial_year
         }
     )
 
@@ -2090,7 +2323,8 @@ def nodal():
             'dept_name': row.dept_name,
             'monthly_val': monthly_val,
             'cumulative_val': cumulative_val,
-            'annual_target_val': annual_target
+            'annual_target_val': annual_target,
+            'financial_year_display': get_financial_year_display(financial_year)
         }
         rows_list.append(row_dict)
 
@@ -2098,7 +2332,8 @@ def nodal():
         "nodal.html",
         rows=rows_list,
         selected_month=selected_month,
-        selected_year=selected_year
+        selected_year=selected_year,
+        financial_year_display=get_financial_year_display(financial_year)
     )
 
 @app.route("/adrm")
@@ -2116,6 +2351,9 @@ def adrm():
         selected_year = int(selected_year)
     except ValueError:
         selected_year = 2026
+
+    # Calculate financial year based on selected month
+    financial_year = get_financial_year_from_month_string(selected_year, selected_month)
 
     # Query to get all FORWARDED_TO_ADRM KPIs with annual targets for performance indicators
     result = db.session.execute(
@@ -2139,7 +2377,7 @@ def adrm():
             FROM monthly_data md
             JOIN kpis k ON md.kpi_id = k.id
             JOIN departments d ON k.department_id = d.id
-            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = md.year
+            LEFT JOIN annualtarget_info at ON at.ref_id = k.id AND at.year = :financial_year
             WHERE md.status = 'FORWARDED_TO_ADRM'
             AND UPPER(md.month) = UPPER(:month)
             AND md.year = :year
@@ -2147,7 +2385,8 @@ def adrm():
         """),
         {
             "month": selected_month,
-            "year": selected_year
+            "year": selected_year,
+            "financial_year": financial_year
         }
     )
 
@@ -2190,7 +2429,8 @@ def adrm():
             'dept_name': row.dept_name,
             'monthly_val': monthly_val,
             'cumulative_val': cumulative_val,
-            'annual_target_val': annual_target
+            'annual_target_val': annual_target,
+            'financial_year_display': get_financial_year_display(financial_year)
         }
         rows_list.append(row_dict)
 
@@ -2198,7 +2438,8 @@ def adrm():
         "adrm.html",
         rows=rows_list,
         selected_month=selected_month,
-        selected_year=selected_year
+        selected_year=selected_year,
+        financial_year_display=get_financial_year_display(financial_year)
     )
 
 @app.route("/return_kpi_to_nodal/<int:id>", methods=["POST"])
@@ -2402,16 +2643,20 @@ def update_kpi(id):
     annual_target = request.form["annual_target"]
 
     try:
-        # Update or insert into annualtarget_info for current year
-        current_year = datetime.now().year
+        # Get the selected financial year from the form
+        financial_year = request.form.get("financial_year", datetime.now().year)
+        try:
+            financial_year = int(financial_year)
+        except ValueError:
+            financial_year = datetime.now().year
         
-        # Check if record exists
+        # Check if record exists for this financial year
         existing = db.session.execute(
             db.text("""
                 SELECT * FROM annualtarget_info 
                 WHERE ref_id = :ref_id AND year = :year
             """),
-            {"ref_id": id, "year": current_year}
+            {"ref_id": id, "year": financial_year}
         ).fetchone()
         
         if existing:
@@ -2425,7 +2670,7 @@ def update_kpi(id):
                 {
                     "annual_target": annual_target,
                     "ref_id": id,
-                    "year": current_year
+                    "year": financial_year
                 }
             )
         else:
@@ -2437,7 +2682,7 @@ def update_kpi(id):
                 """),
                 {
                     "ref_id": id,
-                    "year": current_year,
+                    "year": financial_year,
                     "annual_target": annual_target
                 }
             )

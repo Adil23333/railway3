@@ -446,71 +446,6 @@
     gap: 0.3rem;
  }
  
- .btn-upload-doc {
-    background: #0d6efd;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
- }
- 
- .btn-upload-doc:hover {
-    background: #0b5ed7;
-    color: white;
-    transform: translateY(-1px);
- }
- 
- .btn-view-doc {
-    background: #198754;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
- }
- 
- .btn-view-doc:hover {
-    background: #157347;
-    color: white;
-    transform: translateY(-1px);
- }
- 
- .btn-delete-doc {
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
- }
- 
- .btn-delete-doc:hover {
-    background: #bb2d3b;
-    color: white;
-    transform: translateY(-1px);
- }
- 
  .btn-bulk-upload {
     background: #6f42c1;
     color: white;
@@ -528,28 +463,6 @@
  
  .btn-bulk-upload:hover {
     background: #5a32a3;
-    color: white;
-    transform: translateY(-1px);
- }
- 
- .btn-download-template {
-    background: #17a2b8;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 0.2rem 0.7rem;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
- }
- 
- .btn-download-template:hover {
-    background: #138496;
     color: white;
     transform: translateY(-1px);
  }
@@ -592,23 +505,14 @@
     padding: 0.2rem 0.4rem;
  }
  
- .return-remark-input {
-    display: none;
-    margin-top: 5px;
- }
- 
- .return-remark-input textarea {
-    width: 100%;
-    font-size: 0.7rem;
-    padding: 0.3rem;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    min-height: 50px;
- }
- 
- .return-remark-input .btn-return-confirm {
-    margin-top: 3px;
-    width: 100%;
+ .financial-year-badge {
+    background: #0d6efd;
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 8px;
+    font-weight: 600;
  }
  
  @media (max-width: 992px) {
@@ -717,7 +621,11 @@
  
  <div class="page-heading d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
   <div>
-   <h4><i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>Submitted KPIs – Pending Review</h4>
+   <h4>
+    <i class="fas fa-clipboard-check me-2" style="color:var(--rly-gold)"></i>
+    Submitted KPIs – Pending Review
+    <span class="financial-year-badge">FY {{ financial_year_display if financial_year_display else selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}</span>
+   </h4>
    <p>Review department submissions. You can either <strong class="text-success">Forward Entire Report</strong> (if all are correct) or <strong class="text-danger">Return Individual KPIs</strong> with remarks for correction.</p>
   </div>
  </div>
@@ -773,6 +681,9 @@
      <span class="badge-status badge-submitted">
       <i class="fas fa-calendar-check"></i> Reviewing: {{ selected_month }} {{ selected_year }}
      </span>
+     <span class="badge bg-primary ms-2">
+      <i class="fas fa-calendar-alt"></i> FY {{ financial_year_display if financial_year_display else selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}
+     </span>
     </div>
    </div>
   </form>
@@ -783,7 +694,8 @@
     <div>
         <i class="fas fa-table me-2" style="color:var(--rly-gold);"></i>
         <h6 class="d-inline-block mb-0">KPI Performance Records</h6>
-        <span class="badge bg-light text-dark ms-2">{{ rows|length }} record(s)</span>
+        <span class="badge bg-light text-dark ms-2">{{ rows|length if rows else 0 }} record(s)</span>
+        <span class="badge bg-primary ms-2">FY {{ financial_year_display if financial_year_display else selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}</span>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <button id="downloadBulkTemplateBtn" class="btn-download-bulk">
@@ -816,8 +728,9 @@
       </tr>
     </thead>
     <tbody>
+     {% if rows and rows|length > 0 %}
      {% set month_map = {'JANUARY':1, 'FEBRUARY':2, 'MARCH':3, 'APRIL':4, 'MAY':5, 'JUNE':6, 'JULY':7, 'AUGUST':8, 'SEPTEMBER':9, 'OCTOBER':10, 'NOVEMBER':11, 'DECEMBER':12} %}
-     {% set current_month_num = month_map[selected_month] %}
+     {% set current_month_num = month_map[selected_month] if selected_month in month_map else 1 %}
      
      {% for row in rows %}
       {# CORRECT FORMULA: Use Annual Target #}
@@ -917,14 +830,6 @@
        <td class="text-center action-cell">
         {% if row.status == 'SUBMITTED' %}
          <div class="action-buttons">
-          <div class="btn-group btn-group-sm" role="group">
-           <a href="/hod/download_template/{{ row.id }}" class="btn-download-template btn-sm" title="Download Template">
-            <i class="fas fa-file-pdf"></i> Template
-           </a>
-           <button class="btn-upload-doc btn-sm" onclick="openUploadModal({{ row.id }}, '{{ row.kpi_name|replace("'", "\\'") }}', '{{ selected_month }} {{ selected_year }}')">
-            <i class="fas fa-upload"></i> Upload
-           </button>
-          </div>
           <button class="btn-return btn-sm w-100" onclick="openReturnModal({{ row.id }}, '{{ row.kpi_name|replace("'", "\\'") }}', '{{ selected_month }} {{ selected_year }}')">
            <i class="fas fa-undo-alt"></i> Return with Remarks
           </button>
@@ -936,6 +841,7 @@
         {% endif %}
         </td>
        </tr>
+     {% endfor %}
      {% else %}
       <tr>
        <td colspan="11" class="text-center py-5">
@@ -944,7 +850,8 @@
         <small class="text-muted">No records with 'SUBMITTED' status for {{ selected_month }} {{ selected_year }}</small>
         </td>
        </td>
-     {% endfor %}
+      </tr>
+     {% endif %}
     </tbody>
     <tfoot>
       <tr>
@@ -962,12 +869,12 @@
            <i class="fas fa-calculator me-1"></i>
            <strong>Formula:</strong> Expected YTD = (Annual Target ÷ 12) × Number of months passed<br>
            <i class="fas fa-calendar-alt me-1"></i>
-           <strong>{{ selected_month }}:</strong> {{ current_month_num }} month(s) passed
+           <strong>{{ selected_month }}:</strong> {{ current_month_num if current_month_num is defined else 1 }} month(s) passed
           </small>
           <div class="alert alert-light mt-2 mb-0 p-2 small">
            <i class="fas fa-lightbulb text-warning"></i> 
-           <strong>Example:</strong> Annual Target=1200, {{ selected_month }}={{ current_month_num }} months<br>
-           → Expected = (1200÷12)×{{ current_month_num }} = {{ '%.1f'|format((1200/12)*current_month_num) }}<br>
+           <strong>Example:</strong> Annual Target=1200, {{ selected_month }}={{ current_month_num if current_month_num is defined else 1 }} months<br>
+           → Expected = (1200÷12)×{{ current_month_num if current_month_num is defined else 1 }} = {{ '%.1f'|format((1200/12)*(current_month_num if current_month_num is defined else 1)) }}<br>
            <strong>🔴 Red:</strong> If Actual Cumulative = 500 (Needs Improvement - below expected)<br>
            <strong>🟢 Green:</strong> If Actual Cumulative = 700 (On Track - exceeded expected)
           </div>
@@ -1062,7 +969,7 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body text-center">
-                                <h2 class="text-primary">{{ rows|length }}</h2>
+                                <h2 class="text-primary">{{ rows|length if rows else 0 }}</h2>
                                 <p class="text-muted">Total KPIs</p>
                             </div>
                         </div>
@@ -1070,7 +977,7 @@
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-body text-center">
-                                <h2 class="text-success">{{ rows|selectattr('status', 'equalto', 'SUBMITTED')|list|length }}</h2>
+                                <h2 class="text-success">{{ rows|selectattr('status', 'equalto', 'SUBMITTED')|list|length if rows else 0 }}</h2>
                                 <p class="text-muted">Submitted KPIs</p>
                             </div>
                         </div>
@@ -1104,71 +1011,6 @@
     </div>
 </div>
 
-<!-- Upload Document Modal -->
-<div class="modal fade" id="uploadDocModal" tabindex="-1" aria-labelledby="uploadDocModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background: var(--rly-blue); color: white;">
-                <h5 class="modal-title" id="uploadDocModalLabel">
-                    <i class="fas fa-file-pdf text-danger me-2"></i>
-                    Upload Signed Approval Document
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="uploadDocForm" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Important:</strong> You must upload a signed PDF document for each KPI before forwarding the report.
-                        This serves as your official approval signature.
-                    </div>
-                    
-                    <input type="hidden" id="docKpiId" name="monthly_data_id">
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-tag me-1"></i> KPI Name
-                            </label>
-                            <input type="text" class="form-control" id="docKpiName" readonly style="background: #f8f9fa;">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-calendar-day me-1"></i> Month/Year
-                            </label>
-                            <input type="text" class="form-control" id="docMonthYear" readonly style="background: #f8f9fa;">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-file-upload me-1"></i> Select Signed PDF File
-                        </label>
-                        <input type="file" class="form-control" id="pdfFile" name="pdf_file" accept=".pdf" required>
-                        <small class="text-muted">Only PDF files are allowed. Maximum size: 10MB.</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-comment me-1"></i> Remarks (Optional)
-                        </label>
-                        <textarea class="form-control" id="docRemarks" name="remarks" rows="3" 
-                                  placeholder="Add any additional remarks about this approval..."></textarea>
-                    </div>
-                    
-                    <div id="uploadStatus" style="display: none;" class="mt-2"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="uploadDocBtn">
-                        <i class="fas fa-upload"></i> Upload Document
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Bulk Upload Modal -->
 <div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1189,17 +1031,23 @@
                     </div>
                     
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-calendar-alt me-1"></i> Month
                             </label>
                             <input type="text" class="form-control" id="bulkMonth" readonly value="{{ selected_month }}" style="background: #f8f9fa;">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-calendar-week me-1"></i> Year
                             </label>
                             <input type="text" class="form-control" id="bulkYear" readonly value="{{ selected_year }}" style="background: #f8f9fa;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-chart-line me-1"></i> Financial Year
+                            </label>
+                            <input type="text" class="form-control" id="bulkFY" readonly value="FY {{ financial_year_display if financial_year_display else selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}" style="background: #f8f9fa;">
                         </div>
                     </div>
                     
@@ -1245,6 +1093,26 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
+// ============ FINANCIAL YEAR HELPER FUNCTIONS ============
+function getFinancialYear(year, month) {
+    const monthMap = {
+        'JANUARY': 0, 'FEBRUARY': 1, 'MARCH': 2,
+        'APRIL': 3, 'MAY': 4, 'JUNE': 5,
+        'JULY': 6, 'AUGUST': 7, 'SEPTEMBER': 8,
+        'OCTOBER': 9, 'NOVEMBER': 10, 'DECEMBER': 11
+    };
+    const monthNum = monthMap[month.toUpperCase()] || 0;
+    if (monthNum >= 0 && monthNum <= 2) {
+        return year - 1;
+    }
+    return year;
+}
+
+function getFinancialYearDisplay(financialYear) {
+    return financialYear + '-' + String(financialYear + 1).slice(-2);
+}
+// ============ END FINANCIAL YEAR HELPER FUNCTIONS ============
+
 // Open Return Modal
 function openReturnModal(kpiId, kpiName, monthYear) {
     document.getElementById('returnKpiName').value = kpiName;
@@ -1255,127 +1123,6 @@ function openReturnModal(kpiId, kpiName, monthYear) {
     const modal = new bootstrap.Modal(document.getElementById('returnModal'));
     modal.show();
 }
-
-// Open Upload Document Modal
-function openUploadModal(kpiId, kpiName, monthYear) {
-    document.getElementById('docKpiId').value = kpiId;
-    document.getElementById('docKpiName').value = kpiName;
-    document.getElementById('docMonthYear').value = monthYear;
-    document.getElementById('docRemarks').value = '';
-    document.getElementById('pdfFile').value = '';
-    document.getElementById('uploadStatus').style.display = 'none';
-    
-    // Check if document already exists
-    fetch(`/hod/check_document_status/${kpiId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.uploaded) {
-                document.getElementById('uploadStatus').style.display = 'block';
-                document.getElementById('uploadStatus').innerHTML = `
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        A document is already uploaded: <strong>${data.filename}</strong>
-                        <br><small>Remarks: ${data.remarks || 'None'}</small>
-                        <br>
-                        <button type="button" class="btn btn-warning btn-sm mt-2" onclick="deleteDocument(${kpiId})">
-                            <i class="fas fa-trash"></i> Delete and Re-upload
-                        </button>
-                    </div>
-                `;
-            }
-        })
-        .catch(error => console.error('Error checking document:', error));
-    
-    const modal = new bootstrap.Modal(document.getElementById('uploadDocModal'));
-    modal.show();
-}
-
-// Delete Document
-function deleteDocument(kpiId) {
-    if (!confirm('Are you sure you want to delete the uploaded document?')) {
-        return;
-    }
-    
-    fetch(`/hod/delete_signed_document/${kpiId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('uploadStatus').style.display = 'block';
-            document.getElementById('uploadStatus').innerHTML = `
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> ${data.message}
-                </div>
-            `;
-            document.getElementById('pdfFile').value = '';
-            checkDocumentStatus(kpiId);
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error deleting document. Please try again.');
-    });
-}
-
-// Handle single document upload
-document.getElementById('uploadDocForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const uploadBtn = document.getElementById('uploadDocBtn');
-    const statusDiv = document.getElementById('uploadStatus');
-    const kpiId = document.getElementById('docKpiId').value;
-    
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-    statusDiv.style.display = 'block';
-    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Uploading document...</div>';
-    
-    fetch(`/hod/upload_signed_document/${kpiId}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            statusDiv.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle"></i> ${data.message}
-                </div>
-            `;
-            checkDocumentStatus(parseInt(kpiId));
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadDocModal'));
-                modal.hide();
-                location.reload();
-            }, 2000);
-        } else {
-            statusDiv.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> ${data.message}
-                </div>
-            `;
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        statusDiv.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i> Error uploading document. Please try again.
-            </div>
-        `;
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Document';
-    });
-});
 
 // Handle bulk upload
 document.getElementById('bulkUploadForm').addEventListener('submit', function(e) {
@@ -1411,7 +1158,7 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
+        if (data && data.success) {
             statusDiv.innerHTML = `
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle"></i> ${data.message}
@@ -1422,13 +1169,13 @@ document.getElementById('bulkUploadForm').addEventListener('submit', function(e)
             });
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('bulkUploadModal'));
-                modal.hide();
+                if (modal) modal.hide();
                 location.reload();
             }, 2000);
         } else {
             statusDiv.innerHTML = `
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> ${data.message}
+                    <i class="fas fa-exclamation-circle"></i> ${data && data.message ? data.message : 'Upload failed'}
                 </div>
             `;
             uploadBtn.disabled = false;
@@ -1524,14 +1271,14 @@ function checkDocumentStatus(kpiId) {
     fetch(`/hod/check_document_status/${kpiId}`)
         .then(response => response.json())
         .then(data => {
-            if (data.uploaded) {
+            if (data && data.uploaded) {
                 statusDiv.innerHTML = `
                     <div class="d-flex flex-column align-items-center gap-1">
                         <span class="doc-uploaded">
                             <i class="fas fa-check-circle"></i> Uploaded
                         </span>
                         <small class="text-muted" style="font-size: 0.6rem; word-break: break-all; max-width: 120px;">
-                            ${data.filename}
+                            ${data.filename || 'Document'}
                         </small>
                         <div class="btn-group btn-group-sm" role="group">
                             <a href="/hod/view_signed_document/${kpiId}" 
@@ -1558,7 +1305,7 @@ function checkDocumentStatus(kpiId) {
             }
         })
         .catch(error => {
-            console.error('Error checking document status:', error);
+            console.error('Error checking document status for KPI', kpiId, error);
             statusDiv.innerHTML = `
                 <span class="text-muted" style="font-size: 0.7rem;">
                     <i class="fas fa-exclamation-triangle"></i> Error
@@ -1569,8 +1316,8 @@ function checkDocumentStatus(kpiId) {
 
 // Forward All functionality
 document.getElementById('forwardAllBtn').addEventListener('click', function() {
-    const submittedRows = document.querySelectorAll('.kpi-checkbox');
-    const totalSubmitted = submittedRows.length;
+    const checkboxes = document.querySelectorAll('.kpi-checkbox');
+    const totalSubmitted = checkboxes.length;
     
     if (totalSubmitted === 0) {
         alert('⚠️ No submitted KPIs found to forward.');
@@ -1579,33 +1326,46 @@ document.getElementById('forwardAllBtn').addEventListener('click', function() {
     
     // Check if all submitted KPIs have documents uploaded
     let hasMissingDoc = false;
-    let missingDocIds = [];
+    let missingDocNames = [];
     let checkedCount = 0;
-    let totalChecked = 0;
+    const totalChecked = checkboxes.length;
     
-    const checkPromises = Array.from(submittedRows).map(cb => {
+    const checkPromises = Array.from(checkboxes).map(cb => {
         const id = cb.value;
-        totalChecked++;
+        // Get the KPI name from the row
+        const row = cb.closest('tr');
+        let kpiName = 'Unknown KPI';
+        if (row) {
+            const nameCell = row.querySelector('.kpi-name-cell strong');
+            if (nameCell) {
+                kpiName = nameCell.textContent.trim();
+            }
+        }
         return fetch(`/hod/check_document_status/${id}`)
             .then(response => response.json())
             .then(data => {
                 checkedCount++;
-                if (!data.uploaded) {
+                if (!data || !data.uploaded) {
                     hasMissingDoc = true;
-                    missingDocIds.push(id);
+                    missingDocNames.push(kpiName);
                 }
+            })
+            .catch(() => {
+                checkedCount++;
+                hasMissingDoc = true;
+                missingDocNames.push(kpiName);
             });
     });
     
     Promise.all(checkPromises).then(() => {
         if (hasMissingDoc) {
-            alert(`⚠️ The following KPI(s) do not have signed documents uploaded:\n\n${missingDocIds.join('\n')}\n\nPlease upload signed documents for all KPIs before forwarding the report.`);
+            alert(`⚠️ The following KPI(s) do not have signed documents uploaded:\n\n${missingDocNames.join('\n')}\n\nPlease upload signed documents for all KPIs before forwarding the report.`);
             return;
         }
         
         // Check for red indicators (Needs Improvement)
-        const redIndicators = Array.from(submittedRows).filter(cb => cb.getAttribute('data-indicator') === 'danger');
-        const greenIndicators = Array.from(submittedRows).filter(cb => cb.getAttribute('data-indicator') === 'success');
+        const redIndicators = Array.from(checkboxes).filter(cb => cb.getAttribute('data-indicator') === 'danger');
+        const greenIndicators = Array.from(checkboxes).filter(cb => cb.getAttribute('data-indicator') === 'success');
         
         let confirmMessage = `📤 FORWARD ENTIRE REPORT\n\n`;
         confirmMessage += `You are about to forward ${totalSubmitted} KPI(s) to the Nodal Officer.\n\n`;
@@ -1651,11 +1411,11 @@ document.getElementById('confirmForwardBtn').addEventListener('click', function(
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
+        if (data && data.success) {
             alert('✅ ' + data.message);
             location.reload();
         } else {
-            alert('❌ Error: ' + data.message);
+            alert('❌ Error: ' + (data && data.message ? data.message : 'Unknown error'));
             this.disabled = false;
             this.innerHTML = '<i class="fas fa-share"></i> Forward Report';
         }
@@ -1681,10 +1441,28 @@ if (selectAllCheckbox) {
 
 // Check document status for all rows on page load
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.kpi-checkbox').forEach(checkbox => {
-        const kpiId = checkbox.value;
-        checkDocumentStatus(kpiId);
-    });
+    const checkboxes = document.querySelectorAll('.kpi-checkbox');
+    if (checkboxes.length > 0) {
+        checkboxes.forEach(checkbox => {
+            const kpiId = checkbox.value;
+            if (kpiId) {
+                checkDocumentStatus(kpiId);
+            }
+        });
+    }
+    
+    // Initialize financial year display if not set
+    const monthSelect = document.querySelector('select[name="month"]');
+    const yearSelect = document.querySelector('select[name="year"]');
+    if (monthSelect && yearSelect) {
+        const month = monthSelect.value;
+        const year = parseInt(yearSelect.value);
+        if (!isNaN(year)) {
+            const fy = getFinancialYear(year, month);
+            const fyDisplay = getFinancialYearDisplay(fy);
+            // The badges are already set by the backend template, this is just a fallback
+        }
+    }
 });
 
 // Logout confirmation
@@ -1700,7 +1478,8 @@ if (logoutBtn) {
 // Toggle select all when individual checkboxes change
 document.querySelectorAll('.kpi-checkbox').forEach(cb => {
     cb.addEventListener('change', function() {
-        const allChecked = document.querySelectorAll('.kpi-checkbox:checked').length === document.querySelectorAll('.kpi-checkbox').length;
+        const allCheckboxes = document.querySelectorAll('.kpi-checkbox');
+        const allChecked = allCheckboxes.length > 0 && document.querySelectorAll('.kpi-checkbox:checked').length === allCheckboxes.length;
         if (selectAllCheckbox) {
             selectAllCheckbox.checked = allChecked;
         }
@@ -1714,14 +1493,6 @@ indicators.forEach(indicator => {
     setTimeout(() => {
         if (indicator) indicator.style.animation = '';
     }, 300);
-});
-
-// Return button confirmation with remarks
-document.querySelectorAll('.btn-return:not([disabled])').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        // This is now handled by the modal
-        // The modal is opened via onclick in the HTML
-    });
 });
 </script>
 </body>

@@ -420,6 +420,15 @@
  .target-cell {
     min-width: 80px;
  }
+ .financial-year-badge {
+    background: #0d6efd;
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 8px;
+    font-weight: 600;
+ }
  
  @media (max-width: 992px) {
  .top-navbar { 
@@ -549,9 +558,9 @@
 <form method="POST" id="kpiForm" novalidate>
 <div class="filter-section">
     <div class="row g-3 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label fw-semibold"><i class="fas fa-calendar me-1"></i>Select Month</label>
-            <select name="month" class="form-select" onchange="this.form.submit()" id="monthSelect">
+            <select name="month" class="form-select" id="monthSelect">
                 <option value="JANUARY" {% if selected_month == 'JANUARY' %}selected{% endif %}>JANUARY</option>
                 <option value="FEBRUARY" {% if selected_month == 'FEBRUARY' %}selected{% endif %}>FEBRUARY</option>
                 <option value="MARCH" {% if selected_month == 'MARCH' %}selected{% endif %}>MARCH</option>
@@ -566,15 +575,21 @@
                 <option value="DECEMBER" {% if selected_month == 'DECEMBER' %}selected{% endif %}>DECEMBER</option>    
             </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label fw-semibold"><i class="fas fa-calendar-alt me-1"></i>Select Year</label>
-            <select name="year" class="form-select" onchange="handleYearChange(this)" id="yearSelect">
+            <select name="year" class="form-select" id="yearSelect">
                 {% for y in range(2024, 2031) %}
                     <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="form-label fw-semibold"><i class="fas fa-chart-line me-1"></i>Financial Year</div>
+            <div class="badge bg-primary fs-6 p-2" id="financialYearDisplay">
+                <i class="fas fa-calendar-check me-1"></i> {{ financial_year_display or selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="text-muted small mt-2">
                 <i class="fas fa-lightbulb"></i> Tip: All four numeric fields are <strong class="text-danger">mandatory</strong> for submission.
             </div>
@@ -585,7 +600,10 @@
 <div class="table-card">
  <div class="table-card-header">
  <i class="fas fa-table" style="color:var(--rly-gold);"></i>
- <h6>KPI Performance Data Entry Form <span id="targetYearDisplay" class="target-year-badge">{{ selected_year }}</span></h6>
+ <h6>KPI Performance Data Entry Form 
+    <span id="targetYearDisplay" class="target-year-badge">{{ selected_year }}</span>
+    <span id="financialYearBadge" class="financial-year-badge">FY {{ financial_year_display or selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}</span>
+ </h6>
  </div>
  <div class="table-responsive">
  <table class="kpi-table">
@@ -623,12 +641,13 @@
             <span class="target-badge {% if kpi.display_annual_target and kpi.display_annual_target != 0 %}year-specific{% else %}default-target{% endif %}" 
                   id="target-{{ kpi.id }}" 
                   data-kpi-id="{{ kpi.id }}" 
-                  data-year="{{ selected_year }}">
+                  data-year="{{ selected_year }}"
+                  data-financial-year="{{ financial_year_display or selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}">
                 {{ kpi.display_annual_target or '0' }}
             </span>
             {% if kpi.display_annual_target and kpi.display_annual_target != 0 %}
                 <small class="text-success d-block" style="font-size: 0.6rem;">
-                    <i class="fas fa-check-circle"></i> Year-specific
+                    <i class="fas fa-check-circle"></i> FY {{ financial_year_display or selected_year ~ '-' ~ (selected_year + 1)|string|last(2) }}
                 </small>
             {% else %}
                 <small class="text-muted d-block" style="font-size: 0.6rem;">
@@ -694,6 +713,28 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script>
+// ============ FINANCIAL YEAR HELPER FUNCTIONS ============
+function getFinancialYear(year, month) {
+    // month is string like 'JANUARY', 'FEBRUARY', etc.
+    const monthMap = {
+        'JANUARY': 0, 'FEBRUARY': 1, 'MARCH': 2,
+        'APRIL': 3, 'MAY': 4, 'JUNE': 5,
+        'JULY': 6, 'AUGUST': 7, 'SEPTEMBER': 8,
+        'OCTOBER': 9, 'NOVEMBER': 10, 'DECEMBER': 11
+    };
+    const monthNum = monthMap[month.toUpperCase()] || 0;
+    // Jan-Mar (0-2) belong to previous financial year
+    if (monthNum >= 0 && monthNum <= 2) {
+        return year - 1;
+    }
+    return year;
+}
+
+function getFinancialYearDisplay(financialYear) {
+    return financialYear + '-' + String(financialYear + 1).slice(-2);
+}
+// ============ END FINANCIAL YEAR HELPER FUNCTIONS ============
+
 // Toast notification system
 function showToast(message, type = 'success') {
     const toastContainer = document.getElementById('toastContainer') || (() => {
@@ -725,10 +766,11 @@ function showToast(message, type = 'success') {
     }, 4000);
 }
 
-// Fetch annual target for a specific KPI and year
-async function fetchAnnualTarget(kpiId, year) {
+// Fetch annual target for a specific KPI and year with financial year logic
+async function fetchAnnualTarget(kpiId, year, month) {
     try {
-        const response = await fetch(`/api/get_annual_target/${kpiId}/${year}`);
+        const url = `/api/get_annual_target/${kpiId}/${year}?month=${encodeURIComponent(month)}`;
+        const response = await fetch(url);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -737,8 +779,8 @@ async function fetchAnnualTarget(kpiId, year) {
     }
 }
 
-// Update annual target display for a single KPI
-async function updateTargetForKPI(kpiId, year) {
+// Update annual target display for a single KPI with financial year
+async function updateTargetForKPI(kpiId, year, month) {
     const targetElement = document.getElementById(`target-${kpiId}`);
     if (!targetElement) return;
     
@@ -747,13 +789,17 @@ async function updateTargetForKPI(kpiId, year) {
     targetElement.textContent = 'Loading...';
     
     try {
-        const data = await fetchAnnualTarget(kpiId, year);
+        const data = await fetchAnnualTarget(kpiId, year, month);
+        
+        // Calculate financial year for display
+        const financialYear = getFinancialYear(parseInt(year), month);
+        const financialYearDisplay = getFinancialYearDisplay(financialYear);
         
         if (data && data.success && data.annual_target !== null && data.annual_target !== 0) {
             // Year-specific target found
             targetElement.textContent = data.annual_target;
             targetElement.className = 'target-badge year-specific';
-            targetElement.title = `Target for ${year} (Year-specific)`;
+            targetElement.title = `Target for FY ${financialYearDisplay}`;
             
             // Update the small indicator text
             const parentCell = targetElement.closest('.target-cell');
@@ -763,11 +809,11 @@ async function updateTargetForKPI(kpiId, year) {
                 if (existingIndicator) {
                     existingIndicator.remove();
                 }
-                // Add new indicator
+                // Add new indicator with financial year
                 const indicator = document.createElement('small');
                 indicator.className = 'text-success d-block';
                 indicator.style.fontSize = '0.6rem';
-                indicator.innerHTML = '<i class="fas fa-check-circle"></i> Year-specific';
+                indicator.innerHTML = `<i class="fas fa-check-circle"></i> FY ${financialYearDisplay}`;
                 parentCell.appendChild(indicator);
             }
         } else {
@@ -789,6 +835,10 @@ async function updateTargetForKPI(kpiId, year) {
                 parentCell.appendChild(indicator);
             }
         }
+        
+        // Update the target element with financial year data attribute
+        targetElement.setAttribute('data-financial-year', financialYearDisplay);
+        
     } catch (error) {
         console.error('Error updating target for KPI', kpiId, error);
         targetElement.textContent = '0';
@@ -796,15 +846,15 @@ async function updateTargetForKPI(kpiId, year) {
     }
 }
 
-// Update all targets when year changes
-async function updateAllTargets(year) {
+// Update all targets when month/year changes
+async function updateAllTargets(year, month) {
     const targetElements = document.querySelectorAll('.target-badge');
     const updatePromises = [];
     
     targetElements.forEach(element => {
         const kpiId = element.getAttribute('data-kpi-id');
         if (kpiId) {
-            updatePromises.push(updateTargetForKPI(kpiId, year));
+            updatePromises.push(updateTargetForKPI(kpiId, year, month));
         }
     });
     
@@ -821,20 +871,39 @@ async function updateAllTargets(year) {
         targetYearDisplay.textContent = year;
     }
     
-    showToast(`Annual targets updated for ${year}`, 'info');
+    // Update financial year display
+    const financialYear = getFinancialYear(parseInt(year), month);
+    const financialYearDisplay = getFinancialYearDisplay(financialYear);
+    
+    const financialYearDisplayElement = document.getElementById('financialYearDisplay');
+    if (financialYearDisplayElement) {
+        financialYearDisplayElement.innerHTML = `<i class="fas fa-calendar-check me-1"></i> FY ${financialYearDisplay}`;
+    }
+    
+    const financialYearBadge = document.getElementById('financialYearBadge');
+    if (financialYearBadge) {
+        financialYearBadge.textContent = `FY ${financialYearDisplay}`;
+    }
+    
+    showToast(`Annual targets updated for FY ${financialYearDisplay}`, 'info');
 }
 
-// Handle year change
-function handleYearChange(selectElement) {
-    const selectedYear = selectElement.value;
-    const form = selectElement.closest('form');
+// Handle month/year change - FIXED: event parameter handled correctly
+function handleMonthYearChange(event) {
+    // Get the select elements
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    
+    const selectedMonth = monthSelect.value;
+    const selectedYear = yearSelect.value;
     
     // Show loading toast
-    showToast(`Loading targets for ${selectedYear}...`, 'info');
+    showToast(`Loading targets for ${selectedMonth} ${selectedYear}...`, 'info');
     
     // Update targets
-    updateAllTargets(selectedYear).then(() => {
+    updateAllTargets(selectedYear, selectedMonth).then(() => {
         // Submit the form after updating targets
+        const form = document.getElementById('kpiForm');
         if (form) {
             form.submit();
         }
@@ -984,6 +1053,18 @@ function validateMandatoryFields() {
 
 // Form submission with validation
 document.addEventListener('DOMContentLoaded', function() {
+    // Attach event listeners to month and year selects
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    
+    if (monthSelect) {
+        monthSelect.addEventListener('change', handleMonthYearChange);
+    }
+    
+    if (yearSelect) {
+        yearSelect.addEventListener('change', handleMonthYearChange);
+    }
+    
     attachRemoveButtonHandlers();
     
     // Logout confirmation
@@ -1043,15 +1124,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 1000);
     
-    // Initialize targets for current year
-    const currentYear = document.getElementById('yearSelect')?.value || '{{ selected_year }}';
-    if (currentYear) {
+    // Initialize targets for current month/year with financial year logic
+    if (monthSelect && yearSelect) {
+        const currentMonth = monthSelect.value;
+        const currentYear = yearSelect.value;
+        
+        // Initialize financial year display
+        const financialYear = getFinancialYear(parseInt(currentYear), currentMonth);
+        const financialYearDisplay = getFinancialYearDisplay(financialYear);
+        
+        const financialYearDisplayElement = document.getElementById('financialYearDisplay');
+        if (financialYearDisplayElement) {
+            financialYearDisplayElement.innerHTML = `<i class="fas fa-calendar-check me-1"></i> FY ${financialYearDisplay}`;
+        }
+        
+        const financialYearBadge = document.getElementById('financialYearBadge');
+        if (financialYearBadge) {
+            financialYearBadge.textContent = `FY ${financialYearDisplay}`;
+        }
+        
         setTimeout(() => {
-            updateAllTargets(currentYear);
+            updateAllTargets(currentYear, currentMonth);
         }, 500);
     }
     
-    console.log('Department KPI Entry form loaded – Year-specific targets enabled');
+    console.log('Department KPI Entry form loaded – Financial year targets enabled');
 });
 </script>
 </body>
